@@ -72,20 +72,14 @@ module Inter
       user.update!(plan: plan)
       log_info "Assinatura do usuário #{user.id} ativada/renovada com sucesso! Plano: #{plan}"
 
-      # Notificar o usuário via WhatsApp
-      if user.provider == "phone" && user.uid.present?
-        begin
-          plan_name = plan.to_s.humanize
-          Meta::Service.new(recipient: user.uid).send_message(
-            "🎉 *Pagamento Confirmado!*\n\n" \
-            "Deu tudo certo! Sua assinatura do plano *#{plan_name}* via Pix Automático está ativa.\n\n" \
-            "Seu limite de transcrições foi atualizado e você já pode voltar a transcrever seus áudios normalmente. " \
-            "Muito obrigado pela confiança! 🚀"
-          )
-        rescue => e
-          log_error "Erro ao enviar notificação de Pix para WhatsApp: #{e.message}"
-        end
-      end
+      plan_name = plan.to_s.humanize
+      user.notify(
+        subject: "Pagamento confirmado - plano #{plan_name} ativo",
+        text: "🎉 *Pagamento Confirmado!*\n\n" \
+              "Deu tudo certo! Sua assinatura do plano *#{plan_name}* via Pix Automático está ativa.\n\n" \
+              "Seu limite de transcrições foi atualizado e você já pode voltar a transcrever seus áudios normalmente. " \
+              "Muito obrigado pela confiança! 🚀"
+      )
     end
   end
 end

@@ -75,6 +75,19 @@ class User < ApplicationRecord
     subscription&.active_or_trialing? || false
   end
 
+  # Notificação de conta (pagamento, renovação, expiração...). Quem se cadastrou
+  # pelo WhatsApp recebe lá; os demais (Google/email) recebem por email.
+  def notify(subject:, text:)
+    if provider == "phone" && uid.present?
+      Meta::Service.new(recipient: uid).send_message(text)
+    elsif email.present?
+      NotificationMailer.notice(self, subject, text).deliver_later
+    end
+  rescue => e
+    Rails.logger.error "[User#notify] Falha ao notificar user #{id}: #{e.message}"
+    Sentry.capture_exception(e)
+  end
+
   def complete_onboarding!
     update!(onboarding_completed: true)
   end

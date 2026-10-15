@@ -56,7 +56,7 @@ module Inter
       @subscription.user.update!(plan: @subscription.plan)
       log_info "Ciclo pago - subscription #{@subscription.id}, próximo vencimento #{next_due}"
 
-      notify("✅ *Pagamento da sua assinatura confirmado!*\n\nSeu plano *#{plan_name}* foi renovado até #{next_due.strftime('%d/%m/%Y')}. Obrigado! 🚀")
+      notify("Pagamento da assinatura confirmado", "✅ *Pagamento da sua assinatura confirmado!*\n\nSeu plano *#{plan_name}* foi renovado até #{next_due.strftime('%d/%m/%Y')}. Obrigado! 🚀")
     end
 
     private
@@ -72,7 +72,7 @@ module Inter
       log_info "Recorrência #{@subscription.inter_recorrencia_id} #{rec_status} - cancelando subscription #{@subscription.id}"
       @subscription.update!(status: :cancelled, cancelled_at: Time.current)
       downgrade_user!
-      notify("🚫 Sua autorização do Pix Automático foi encerrada no seu banco, então a assinatura do EscreveZap foi cancelada e você voltou ao plano Grátis.\n\nPara assinar de novo, é só abrir o menu → Seu Plano.")
+      notify("Sua assinatura do EscreveZap foi cancelada", "🚫 Sua autorização do Pix Automático foi encerrada no seu banco, então a assinatura do EscreveZap foi cancelada e você voltou ao plano Grátis.\n\nPara assinar de novo, é só abrir o menu → Seu Plano.")
       true
     end
 
@@ -128,7 +128,7 @@ module Inter
       log_info "Expirando subscription #{@subscription.id} (cobr #{@subscription.inter_cobr_txid}: #{@subscription.inter_cobr_status})"
       @subscription.update!(status: :expired)
       downgrade_user!
-      notify("⚠️ Não conseguimos confirmar o pagamento da sua assinatura do EscreveZap via Pix Automático, então você voltou ao plano Grátis.\n\nSe quiser continuar no plano *#{plan_name}*, é só abrir o menu → Seu Plano e assinar de novo.")
+      notify("Não conseguimos confirmar o pagamento da sua assinatura", "⚠️ Não conseguimos confirmar o pagamento da sua assinatura do EscreveZap via Pix Automático, então você voltou ao plano Grátis.\n\nSe quiser continuar no plano *#{plan_name}*, é só abrir o menu → Seu Plano e assinar de novo.")
     end
 
     def downgrade_user!
@@ -139,14 +139,8 @@ module Inter
       @subscription.plan.to_s.capitalize
     end
 
-    def notify(text)
-      user = @subscription.user
-      return unless user.provider == "phone" && user.uid.present?
-
-      Meta::Service.new(recipient: user.uid).send_message(text)
-    rescue => e
-      Sentry.capture_exception(e)
-      log_error "Erro ao notificar user #{user.id}: #{e.message}"
+    def notify(subject, text)
+      @subscription.user.notify(subject: subject, text: text)
     end
   end
 end
