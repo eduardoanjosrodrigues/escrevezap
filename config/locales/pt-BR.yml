@@ -373,6 +373,6 @@ pt-BR:
       cancel_description: "Voltar para o menu principal"
     disconnected:
       subject: "⚠️ Seu WhatsApp foi desconectado do EscreveZap"
-      text_whatsapp: "⚠️ *Seu WhatsApp foi desconectado do EscreveZap.*\n\nEnquanto estiver desconectado, seus áudios *não serão transcritos*.\n\nPara reconectar, me mande qualquer mensagem aqui e toque em *⚡ Transcrever no chat* no menu."
-      text_email: "Detectamos que o seu WhatsApp foi desconectado do EscreveZap. Enquanto estiver desconectado, seus áudios *não serão transcritos*.\n\nAcesse o painel e reconecte seu WhatsApp para voltar a usar."
+      text_whatsapp: "⚠️ *Seu WhatsApp foi desconectado do EscreveZap.*\n\nEnquanto estiver desconectado, o *Transcrever no chat* (reagir ao áudio com emoji) fica pausado. Encaminhar áudios para mim continua funcionando normalmente.\n\nPara reconectar, me mande qualquer mensagem aqui e toque em *⚡ Transcrever no chat* no menu."
+      text_email: "Detectamos que o seu WhatsApp foi desconectado do EscreveZap. Enquanto estiver desconectado, o Transcrever no chat (reagir ao áudio com emoji) fica pausado. Encaminhar áudios para o EscreveZap no WhatsApp continua funcionando normalmente.\n\nAcesse o painel e reconecte seu WhatsApp para voltar a transcrever direto nas conversas."
       email_cta: "Reconectar agora"

@@ -57,7 +57,7 @@ module Meta
         ]
       }
 
-      rendered_message = "⚠️ Seu WhatsApp foi desconectado do EscreveZap, e seus áudios não estão sendo transcritos no momento.\n\nPara voltar a usar, toque em *Reconectar* abaixo e gere um novo código de conexão.\n\n[Reconectar]"
+      rendered_message = "⚠️ Seu WhatsApp foi desconectado do EscreveZap, e o Transcrever no chat (reagir ao áudio com emoji) está pausado. Encaminhar áudios para cá continua funcionando normalmente.\n\nPara reconectar, toque em *Reconectar* abaixo e gere um novo código de conexão.\n\n[Reconectar]"
 
       {
         meta_json: meta_json,
