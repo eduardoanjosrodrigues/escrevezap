@@ -38,12 +38,15 @@ module Meta
       }
     end
 
-    # Template UTILITY "whatsapp_desconectado" (pt_BR), cadastrado no WhatsApp
-    # Manager. Corpo sem variáveis e um botão de resposta rápida "Reconectar",
-    # cujo payload (menu_connect) cai direto no fluxo de novo código.
-    def whatsapp_desconectado
+    # Template UTILITY "transcrever_no_chat_pausado" (pt_BR, id 1544226850844758),
+    # cadastrado via API. Corpo sem variáveis e um botão de resposta rápida
+    # "Ver opções", cujo payload (menu_connect) mostra o passo a passo de conexão.
+    # A Meta rejeitou como SCAM templates anteriores no estilo "sua conexão foi
+    # perdida, reconecte" (padrão de golpe), por isso o texto evita falar em
+    # código/desconexão e se apresenta como o serviço que o usuário ativou.
+    def transcrever_no_chat_pausado
       meta_json = {
-        name: "whatsapp_desconectado",
+        name: "transcrever_no_chat_pausado",
         language: {
           code: "pt_BR"
         },
@@ -57,7 +60,10 @@ module Meta
         ]
       }
 
-      rendered_message = "⚠️ Seu WhatsApp foi desconectado do EscreveZap, e o Transcrever no chat (reagir ao áudio com emoji) está pausado. Encaminhar áudios para cá continua funcionando normalmente.\n\nPara reconectar, toque em *Reconectar* abaixo e gere um novo código de conexão.\n\n[Reconectar]"
+      rendered_message = "Olá! Aqui é o EscreveZap, o serviço de transcrição de áudios que você ativou.\n\n" \
+                         "O recurso *Transcrever no chat* foi pausado porque o EscreveZap não aparece mais nos aparelhos conectados do seu WhatsApp. " \
+                         "Encaminhar áudios para esta conversa continua funcionando normalmente.\n\n" \
+                         "Se quiser reativar o recurso, toque em *Ver opções*.\n\n[Ver opções]"
 
       {
         meta_json: meta_json,

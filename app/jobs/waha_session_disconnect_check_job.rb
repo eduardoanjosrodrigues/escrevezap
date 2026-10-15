@@ -34,7 +34,7 @@ class WahaSessionDisconnectCheckJob < ApplicationJob
     user.notify(
       subject:   I18n.t("whatsapp_notices.disconnected.subject"),
       text:      disconnect_text(user),
-      template:  Meta::RenderTemplate.new(nil).whatsapp_desconectado,
+      template:  Meta::RenderTemplate.new(nil).transcrever_no_chat_pausado,
       email_cta: {
         label: I18n.t("whatsapp_notices.disconnected.email_cta"),
         url:   Rails.application.routes.url_helpers.app_waha_session_url(**Rails.application.config.action_mailer.default_url_options)
