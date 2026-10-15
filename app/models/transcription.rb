@@ -7,9 +7,12 @@ class Transcription < ApplicationRecord
   has_many   :transcription_errors, -> { order(created_at: :desc) }
 
   enum :status, {
-    processing: "processing",
-    completed:  "completed",
-    failed:     "failed"
+    processing:            "processing",
+    completed:             "completed",
+    failed:                "failed",
+    # Áudio acima do limite de duração do plano esperando o usuário aceitar
+    # gastar créditos extras (ver LONG_AUDIO_CREDIT_SECONDS).
+    awaiting_confirmation: "awaiting_confirmation"
   }, default: :processing
 
   enum :direction, {
@@ -24,6 +27,13 @@ class Transcription < ApplicationRecord
     waha:   "waha",
     direct: "direct"
   }, default: :waha
+
+  # Cada bloco de 25 min de áudio longo consome uma transcrição da cota.
+  LONG_AUDIO_CREDIT_SECONDS = 25.minutes.to_i
+
+  def self.credits_for_duration(seconds)
+    [ (seconds.to_f / LONG_AUDIO_CREDIT_SECONDS).ceil, 1 ].max
+  end
 
   scope :completed, -> { where(status: :completed) }
   scope :this_month, -> { where("transcriptions.created_at >= ?", Time.current.beginning_of_month) }

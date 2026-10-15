@@ -74,6 +74,12 @@ module Reply
       when "cancel_subscription"
         process_subscription_cancellation
 
+      # Áudio acima do limite de duração (id carrega a transcription)
+      when /\Along_audio_confirm:(\d+)\z/
+        confirm_long_audio(Regexp.last_match(1).to_i)
+      when /\Along_audio_cancel:(\d+)\z/
+        cancel_long_audio(Regexp.last_match(1).to_i)
+
       # Default fallback
       else
         show_menu

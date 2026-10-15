@@ -35,6 +35,13 @@ module TranscriptionChannels
       MessageSplitter.split(text).each { |chunk| service.send_message(chunk) }
     end
 
+    # buttons: [[id, title], ...] — title com no máximo 20 caracteres.
+    def send_buttons(text, buttons)
+      meta_service.send_message_with_buttons(text, buttons.map { |id, title|
+        { type: "reply", reply: { id: id, title: title } }
+      })
+    end
+
     private
 
     def meta_service

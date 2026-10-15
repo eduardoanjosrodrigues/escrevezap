@@ -5,6 +5,7 @@ module Reply
     include Reply::Connectivity
     include Reply::Billing
     include Reply::FreeText
+    include Reply::LongAudio
 
     def initialize(from:, display_name: nil)
       @display_name = display_name

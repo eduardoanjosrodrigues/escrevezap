@@ -163,7 +163,9 @@ class TranscribeAudioJob < ApplicationJob
     Responda SOMENTE com o JSON válido, sem markdown, sem comentários.
   PROMPT
 
-  def perform(transcription_id)
+  # confirmed: o usuário já aceitou gastar créditos extras por um áudio acima
+  # do limite de duração do plano (Reply::LongAudio).
+  def perform(transcription_id, confirmed: false)
     transcription = Transcription.find(transcription_id)
     user          = transcription.monitored_contact.waha_session.user
     channel       = build_channel(transcription)
@@ -175,8 +177,16 @@ class TranscribeAudioJob < ApplicationJob
       return
     end
 
+    # Guard: áudios por minuto (rajada de encaminhamentos)
+    if !confirmed && rate_limited?(transcription, user)
+      Rails.logger.info "[TranscribeAudioJob] Rate limit de #{User::TRANSCRIPTIONS_PER_MINUTE}/min atingido para user #{user.id} — skipping"
+      fail_transcription!(transcription, "Limite de #{User::TRANSCRIPTIONS_PER_MINUTE} áudios por minuto atingido")
+      TrackUsageJob.perform_later(user_id: user.id, event_type: UsageEvent::TRANSCRIPTION_RATE_LIMITED, metadata: { transcription_id: transcription.id })
+      return
+    end
+
     # Guard: monthly limit
-    if user.transcription_limit_reached?(excluding: transcription)
+    if user.transcription_limit_reached?(excluding: transcription, credits: transcription.credits)
       Rails.logger.info "[TranscribeAudioJob] Limite mensal atingido para user #{user.id} — skipping"
       send_limit_reached_notice(transcription, channel, user)
       fail_transcription!(transcription, "Limite mensal de transcrições atingido")
@@ -191,7 +201,7 @@ class TranscribeAudioJob < ApplicationJob
       return
     end
 
-    process_transcription(transcription, channel, user)
+    process_transcription(transcription, channel, user, confirmed: confirmed)
   end
 
   private
@@ -204,7 +214,7 @@ class TranscribeAudioJob < ApplicationJob
     end
   end
 
-  def process_transcription(transcription, channel, user)
+  def process_transcription(transcription, channel, user, confirmed: false)
     unless transcription.media_url.present? || transcription.media_id.present?
       fail_transcription!(transcription, "URL de mídia ausente na mensagem")
       return
@@ -217,10 +227,26 @@ class TranscribeAudioJob < ApplicationJob
     channel.mark_read
     placeholder_message_id = channel.send_placeholder("_⏳ Transcrevendo com o EscreveZap! Aguarde um instante..._")
 
-    # 1. Download the audio binary
+    # 1. Download the audio binary (áudio longo confirmado já foi baixado e
+    #    anexado na primeira passada — a URL da Meta pode ter expirado)
     stage = "download_audio"
-    audio_data = channel.download_audio
-    attach_audio(transcription, audio_data, transcription.media_url)
+    audio_data = attached_audio(transcription)
+    if audio_data.nil?
+      audio_data = channel.download_audio
+      attach_audio(transcription, audio_data, transcription.media_url)
+    end
+
+    # 1b. Limite de duração do plano, checado antes de pagar o STT. Formatos
+    #     que não são Ogg (duração desconhecida) passam.
+    stage = "check_duration"
+    duration = OggDuration.seconds(audio_data)
+    if duration
+      transcription.update!(audio_duration: duration)
+      if !confirmed && duration > user.max_audio_duration
+        handle_long_audio(transcription, channel, user, placeholder_message_id, duration)
+        return
+      end
+    end
 
     # 2. Write to a temp file and transcribe
     stage = "stt"
@@ -260,11 +286,15 @@ class TranscribeAudioJob < ApplicationJob
       status:         :completed
     )
 
-    # 5. Send/finalize the transcription reply
+    # 5. Send/finalize the transcription reply. No chat direto a entrega vai
+    #    por um job próprio, que reenvia quando a Meta limita a rajada.
     stage = "send_whatsapp"
-    reply_text = transcription.reply_text(user)
-    channel.finalize(placeholder_message_id, reply_text)
-    transcription.update!(reply_message_id: placeholder_message_id)
+    if transcription.direct?
+      SendTranscriptionReplyJob.perform_later(transcription.id)
+    else
+      channel.finalize(placeholder_message_id, transcription.reply_text(user))
+      transcription.update!(reply_message_id: placeholder_message_id)
+    end
 
     # 6. Track usage event (async, non-critical)
     metadata = { transcription_id: transcription.id, duration: transcriber&.duration, plan: user.plan }
@@ -438,6 +468,12 @@ class TranscribeAudioJob < ApplicationJob
     record_error!(transcription, stage: "track_usage", error: e)
   end
 
+  def attached_audio(transcription)
+    transcription.audio.download if transcription.audio.attached?
+  rescue ActiveStorage::FileNotFoundError
+    nil
+  end
+
   def attach_audio(transcription, audio_data, media_url)
     extension = if media_url.blank?
       DEFAULT_AUDIO_EXTENSION
@@ -508,6 +544,98 @@ class TranscribeAudioJob < ApplicationJob
 
     # Email (com link pro billing)
     UsageMailer.limit_reached(user).deliver_later
+  end
+
+  # Conta quantos áudios do usuário chegaram no minuto anterior a este. Só o
+  # primeiro áudio recusado da rajada gera aviso, para não virar spam.
+  def rate_limited?(transcription, user)
+    window = (transcription.created_at - 1.minute)..transcription.created_at
+    earlier = user.waha_session.transcriptions
+                  .where(created_at: window)
+                  .where("transcriptions.id < ?", transcription.id)
+                  .count
+    return false if earlier < User::TRANSCRIPTIONS_PER_MINUTE
+
+    send_rate_limit_notice(transcription, user) if earlier == User::TRANSCRIPTIONS_PER_MINUTE
+    true
+  end
+
+  def send_rate_limit_notice(transcription, user)
+    text = "⏳ *Calma, muitos áudios de uma vez!*\n\n" \
+           "Eu transcrevo até #{User::TRANSCRIPTIONS_PER_MINUTE} áudios por minuto. " \
+           "Os que passaram desse limite não foram transcritos e não contaram no seu plano — " \
+           "é só encaminhar de novo daqui a pouco."
+    notify_user(transcription, user, subject: "Muitos áudios de uma vez", text: text)
+  end
+
+  # Áudio acima do limite de duração do plano. No chat direto, planos pagos
+  # podem confirmar o gasto de créditos extras; nos outros casos é recusado.
+  def handle_long_audio(transcription, channel, user, placeholder_message_id, duration)
+    minutes     = (duration / 60.0).ceil
+    max_minutes = user.max_audio_duration / 60
+
+    if transcription.direct? && !user.free?
+      ask_long_audio_confirmation(transcription, channel, user, duration, minutes)
+      return
+    end
+
+    text = if user.free?
+      "⏱️ *Esse áudio tem #{minutes} min.*\n\n" \
+      "No plano Grátis eu transcrevo áudios de até #{max_minutes} min. " \
+      "Nos planos Basic e Pro o limite é de 25 min — e áudios maiores podem ser transcritos usando créditos extras.\n\n" \
+      "Para assinar, toque em *💳 Plano e Faturamento* no menu."
+    else
+      "⏱️ *Esse áudio tem #{minutes} min.*\n\n" \
+      "Direto nas conversas eu transcrevo áudios de até #{max_minutes} min. " \
+      "Para áudios maiores, *encaminhe o áudio para mim* que eu transcrevo usando créditos extras do seu plano."
+    end
+
+    if transcription.waha?
+      # O placeholder fica na conversa com o contato: só um aviso curto lá, e
+      # a explicação vai pelo bot.
+      channel.finalize(placeholder_message_id, "⏱️ _Áudio de #{minutes} min — acima do limite de #{max_minutes} min para transcrição._") if placeholder_message_id.present?
+    end
+    notify_user(transcription, user, subject: "Áudio muito longo", text: text, channel: channel)
+
+    TrackUsageJob.perform_later(user_id: user.id, event_type: UsageEvent::AUDIO_TOO_LONG,
+                                metadata: { transcription_id: transcription.id, duration: duration, plan: user.plan })
+    fail_transcription!(transcription, "Áudio de #{minutes} min acima do limite de #{max_minutes} min do plano #{user.plan}")
+  end
+
+  def ask_long_audio_confirmation(transcription, channel, user, duration, minutes)
+    credits   = Transcription.credits_for_duration(duration)
+    remaining = user.transcription_credits_remaining(excluding: transcription)
+
+    if credits > remaining
+      channel.send_text("⏱️ *Esse áudio tem #{minutes} min* e custaria *#{credits} créditos* " \
+                        "(1 a cada 25 min), mas você só tem #{remaining} disponíveis este mês.")
+      fail_transcription!(transcription, "Créditos insuficientes para áudio de #{minutes} min (#{credits} > #{remaining})")
+      return
+    end
+
+    transcription.update!(status: :awaiting_confirmation, credits: credits)
+    channel.send_buttons(
+      "⏱️ *Esse áudio tem #{minutes} min* — acima do limite de 25 min por áudio.\n\n" \
+      "Posso transcrever usando *#{credits} créditos* do seu plano (1 a cada 25 min). " \
+      "Você tem #{remaining} disponíveis este mês.",
+      [ [ "long_audio_confirm:#{transcription.id}", "Transcrever" ], [ "long_audio_cancel:#{transcription.id}", "Cancelar" ] ]
+    )
+
+    TrackUsageJob.perform_later(user_id: user.id, event_type: UsageEvent::LONG_AUDIO_CONFIRMATION_REQUESTED,
+                                metadata: { transcription_id: transcription.id, duration: duration, credits: credits })
+  end
+
+  # Avisos que não são a transcrição: no chat direto vão no próprio chat; no
+  # conectado vão pelo bot (a conversa é com o contato).
+  def notify_user(transcription, user, subject:, text:, channel: nil)
+    if transcription.direct?
+      (channel || build_channel(transcription)).send_text(text)
+    else
+      user.notify(subject: subject, text: text)
+    end
+  rescue => e
+    Rails.logger.warn "[TranscribeAudioJob] Falha ao enviar aviso (#{subject}): #{e.message}"
+    Sentry.capture_exception(e) unless Meta::Service.pair_rate_limited?(e)
   end
 
   def send_reaction_limit_notice(user)

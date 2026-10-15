@@ -29,6 +29,15 @@ class User < ApplicationRecord
   # podem testar até este limite por mês e continuam encaminhando áudios ao bot.
   REACTION_TRIAL_LIMIT = 20
 
+  # Duração máxima de um áudio por plano. Acima disso o Free é recusado; nos
+  # planos pagos o áudio encaminhado ao bot pode ser transcrito gastando
+  # créditos extras (Transcription.credits_for_duration) após confirmação.
+  AUDIO_DURATION_LIMITS = { "free" => 5.minutes.to_i, "basic" => 25.minutes.to_i, "pro" => 25.minutes.to_i }.freeze
+
+  # Áudios aceitos por minuto, por usuário. Protege contra rajadas de
+  # encaminhamentos (custo de STT + rate limit da Meta por destinatário).
+  TRANSCRIPTIONS_PER_MINUTE = 10
+
   def self.from_google(auth)
     # Try to find by provider/uid first (returning user via Google)
     user = find_by(provider: auth.provider, uid: auth.uid)
@@ -71,8 +80,18 @@ class User < ApplicationRecord
     waha_session&.monthly_transcription_count(excluding: excluding) || 0
   end
 
-  def transcription_limit_reached?(excluding: nil)
-    monthly_transcriptions_used(excluding: excluding) >= transcription_limit
+  def max_audio_duration
+    AUDIO_DURATION_LIMITS.fetch(plan, AUDIO_DURATION_LIMITS["free"])
+  end
+
+  # credits: quanto a transcrição em questão vai consumir (1, ou mais para
+  # áudios longos confirmados).
+  def transcription_limit_reached?(excluding: nil, credits: 1)
+    monthly_transcriptions_used(excluding: excluding) + credits > transcription_limit
+  end
+
+  def transcription_credits_remaining(excluding: nil)
+    [ transcription_limit - monthly_transcriptions_used(excluding: excluding), 0 ].max
   end
 
   def reaction_limit_reached?(excluding: nil)

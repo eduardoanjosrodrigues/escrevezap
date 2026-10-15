@@ -148,13 +148,15 @@ class WahaSession < ApplicationRecord
   # the 20th audio of a 20/month plan still goes through.
   def monthly_transcriptions(excluding: nil)
     scope = transcriptions.this_month
-                          .where.not(status: :failed)
+                          .where.not(status: [ :failed, :awaiting_confirmation ])
                           .where("transcriptions.status <> 'processing' OR transcriptions.created_at > ?", 1.hour.ago)
     excluding ? scope.where.not(id: excluding.id) : scope
   end
 
+  # Soma créditos, não registros: um áudio longo confirmado vale várias
+  # transcrições da cota.
   def monthly_transcription_count(excluding: nil)
-    monthly_transcriptions(excluding: excluding).count
+    monthly_transcriptions(excluding: excluding).sum(:credits)
   end
 
   private

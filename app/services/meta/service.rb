@@ -10,6 +10,14 @@ module Meta
         raise(KeyError, "credentials meta.token não configurado")
     end
 
+    # Código 131056: mandamos mensagens demais para o mesmo número num curto
+    # intervalo. Não é falha definitiva — basta esperar e reenviar.
+    PAIR_RATE_LIMIT_CODE = "131056".freeze
+
+    def self.pair_rate_limited?(error)
+      error.is_a?(ApiRequest::ApiClientError) && error.message.include?(PAIR_RATE_LIMIT_CODE)
+    end
+
     def initialize(recipient:, sender: PHONE_NUMBER_ID, meta_waba_id: WABA_ID)
       @recipient = recipient
       @sender = sender

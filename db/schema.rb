@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_15_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_15_200000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -156,10 +156,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_140000) do
 
   create_table "transcriptions", force: :cascade do |t|
     t.float "audio_duration"
+    t.string "channel", default: "waha", null: false
     t.datetime "created_at", null: false
+    t.integer "credits", default: 1, null: false
     t.string "direction", default: "incoming", null: false
     t.text "error_message"
     t.text "full_formatted"
+    t.string "media_id"
     t.text "media_url"
     t.bigint "monitored_contact_id", null: false
     t.string "reply_message_id"
@@ -168,6 +171,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_140000) do
     t.text "transcript"
     t.datetime "updated_at", null: false
     t.string "waha_message_id"
+    t.index ["channel"], name: "index_transcriptions_on_channel"
     t.index ["monitored_contact_id", "created_at"], name: "index_transcriptions_on_monitored_contact_id_and_created_at"
     t.index ["monitored_contact_id"], name: "index_transcriptions_on_monitored_contact_id"
     t.index ["status"], name: "index_transcriptions_on_status"
