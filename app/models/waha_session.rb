@@ -174,11 +174,13 @@ class WahaSession < ApplicationRecord
   end
 
   def complete_user_onboarding
-    _old, new_status = saved_change_to_waha_status
+    old_status, new_status = saved_change_to_waha_status
     return unless new_status == "working"
 
-    # Send message to WhatsApp user if provider is phone
-    if user.provider == "phone" && waha_chat_id.present?
+    # Only greet on an actual pairing (QR/pairing code accepted). WAHA routinely
+    # bounces healthy sessions working -> starting -> working, and greeting on
+    # those reconnects spammed users with the same message several times a day.
+    if old_status == "scan_qr_code" && user.provider == "phone" && waha_chat_id.present?
       recipient_phone = waha_chat_id.split("@").first
       meta_service = Meta::Service.new(recipient: recipient_phone)
 
