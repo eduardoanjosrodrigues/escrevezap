@@ -14,7 +14,6 @@ ok()   { echo -e "$(ts) ${GREEN}${BOLD}✔ $*${RESET}"; }
 
 SERVER="eduardo@server"
 REMOTE_DIR="microsaas/escrevezap"
-SUDO_PASS="12345678"
 
 echo ""
 echo -e "${BOLD}╔══════════════════════════════════════╗${RESET}"
@@ -25,12 +24,7 @@ echo ""
 info "Conectando em $SERVER e rodando deploy..."
 echo ""
 
-# Cache sudo no servidor antes de rodar o deploy.sh (que usa sudo internamente)
-ssh -t "$SERVER" "
-  cd ~/'$REMOTE_DIR' &&
-  echo '$SUDO_PASS' | sudo -S -v 2>/dev/null &&
-  bash deploy.sh
-"
+ssh -t "$SERVER" "cd ~/'$REMOTE_DIR' && bash deploy.sh"
 
 echo ""
 ok "Deploy remoto concluído!"

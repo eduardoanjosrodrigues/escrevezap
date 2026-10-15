@@ -32,15 +32,15 @@ echo ""
 
 # ── Step 2: Build & start containers ─────────────────────────────────────────
 info "Building images and starting containers..."
-sudo docker compose -f docker-compose-production.yml up --build -d || fail "docker compose failed"
+docker compose -f docker-compose-production.yml up --build -d || fail "docker compose failed"
 echo ""
 
 # ── Step 3: Health check ──────────────────────────────────────────────────────
 info "Waiting for web container to become healthy..."
 for i in $(seq 1 12); do
-  STATUS=$(sudo docker compose -f docker-compose-production.yml ps --format json web 2>/dev/null \
+  STATUS=$(docker compose -f docker-compose-production.yml ps --format json web 2>/dev/null \
     | grep -o '"Health":"[^"]*"' | head -1 | cut -d'"' -f4 || echo "")
-  STATE=$(sudo docker compose -f docker-compose-production.yml ps --format json web 2>/dev/null \
+  STATE=$(docker compose -f docker-compose-production.yml ps --format json web 2>/dev/null \
     | grep -o '"State":"[^"]*"' | head -1 | cut -d'"' -f4 || echo "")
   if [[ "$STATE" == "running" ]]; then
     ok "Container web is running"
@@ -54,7 +54,7 @@ echo ""
 
 # ── Step 4: Show running services ────────────────────────────────────────────
 info "Running services:"
-sudo docker compose -f docker-compose-production.yml ps --format "table {{.Name}}\t{{.Status}}" \
+docker compose -f docker-compose-production.yml ps --format "table {{.Name}}\t{{.Status}}" \
   | tail -n +2 \
   | while IFS= read -r line; do
       if echo "$line" | grep -q "Up\|running"; then

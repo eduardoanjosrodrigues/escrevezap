@@ -126,7 +126,7 @@ module Reply
         @user.update!(conversation_state: @current_conversation_state)
 
         # Enviar o código Pix
-        amount_cents = (amount * 100).to_i
+        amount_cents = (amount * 100).round
         send_pix_code(
           reference_id: result[:txid],
           pix_code: result[:pix_copia_e_cola],
