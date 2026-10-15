@@ -69,6 +69,14 @@ module Inter
       new("payloadlocationrec.write rec.write")
     end
 
+    def self.for_cobr_read
+      new("cobr.read")
+    end
+
+    def self.for_cobr_write
+      new("cobr.write")
+    end
+
     private
 
     def make_authenticated_request(method, path, params: {}, body: {})

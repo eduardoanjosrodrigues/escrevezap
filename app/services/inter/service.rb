@@ -144,6 +144,42 @@ module Inter
       raise InterError, "Falha ao cancelar recorrência: #{e.message}"
     end
 
+    # Cria a cobrança recorrente (cobr) de um ciclo da recorrência. Precisa ser
+    # criada entre D-10 e D-2 do vencimento; o PSP do pagador debita na data.
+    def create_recurring_charge(id_rec:, due_date:, amount:, description: "Assinatura EscreveZap")
+      log_info "Criando cobrança recorrente (cobr) para #{id_rec} com vencimento #{due_date}..."
+      client = Client.for_cobr_write
+
+      body = {
+        idRec: id_rec,
+        infoAdicional: description.truncate(140),
+        calendario: { dataDeVencimento: due_date.strftime("%Y-%m-%d") },
+        valor: { original: format("%.2f", amount.to_f) },
+        ajusteDiaUtil: true
+      }
+
+      agencia = Rails.application.credentials.dig(:inter, :agencia)
+      conta   = Rails.application.credentials.dig(:inter, :conta)
+      if agencia.present? && conta.present?
+        body[:recebedor] = { agencia: agencia.to_s, conta: conta.to_i, tipoConta: "CORRENTE" } # a doc do Inter envia conta como número
+      end
+
+      response = client.post("/pix/v2/cobr", body)
+      log_info "Cobrança recorrente criada: #{response['txid']} (#{response['status']})"
+      response
+    rescue => e
+      log_error "Erro ao criar cobrança recorrente: #{e.message}"
+      raise InterError, "Falha ao criar cobrança recorrente: #{e.message}"
+    end
+
+    def get_recurring_charge(txid)
+      log_info "Consultando cobrança recorrente #{txid}..."
+      Client.for_cobr_read.get("/pix/v2/cobr/#{txid}")
+    rescue => e
+      log_error "Erro ao consultar cobrança recorrente: #{e.message}"
+      raise InterError, "Falha ao consultar cobrança recorrente: #{e.message}"
+    end
+
     # Consulta a recorrência
     def get_recurrence(id_recorrencia, txid: nil)
       log_info "Consultando recorrência com id: #{id_recorrencia}..."

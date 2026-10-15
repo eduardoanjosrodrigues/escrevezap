@@ -26,34 +26,49 @@ module Inter
       
       log_info "PIX recebido - tx_id: #{tx_id}, idRecorrencia: #{id_rec}, valor: R$ #{data[:amount]}"
 
-      # Tentar encontrar Subscription por idRecorrencia (renovação automática) ou por tx_id (primeiro pagamento)
-      subscription = nil
-      if id_rec.present?
-        subscription = Subscription.find_by(inter_recorrencia_id: id_rec)
+      # Pagamento de um ciclo (cobr) - o polling diário também detecta, então é idempotente
+      if tx_id.present? && (cycle_subscription = Subscription.find_by(inter_cobr_txid: tx_id))
+        RecurringBilling.new(cycle_subscription).mark_cycle_paid!
+        return
       end
-      
-      if subscription.nil? && tx_id.present?
-        subscription = Subscription.find_by(inter_txid: tx_id)
+
+      if id_rec.present? && (rec_subscription = Subscription.find_by(inter_recorrencia_id: id_rec)) &&
+         (rec_subscription.active? || rec_subscription.past_due?) && rec_subscription.cobr_created_for_next_charge?
+        RecurringBilling.new(rec_subscription).mark_cycle_paid!
+        return
       end
+
+      # Primeiro pagamento (cob da Jornada 3)
+      subscription = Subscription.find_by(inter_txid: tx_id) if tx_id.present?
 
       if subscription.nil?
         log_error "Nenhuma assinatura encontrada para o tx_id: #{tx_id} ou idRecorrencia: #{id_rec}."
         return
       end
 
+      if subscription.active?
+        log_info "Primeiro pagamento já processado para subscription #{subscription.id} - ignorando"
+        return
+      end
+
       user = subscription.user
       plan = subscription.plan || "basic"
-      
-      # Atualizar/Ativar a assinatura
+
+      # Os ciclos seguintes vencem no mesmo dia do mês do início da recorrência
+      anchor   = subscription.billing_anchor_date || Date.current
+      next_due = Subscription.cycle_due_date(anchor, 1)
+
       subscription.update!(
         status: :active,
         inter_recorrencia_id: id_rec.presence || subscription.inter_recorrencia_id,
+        billing_anchor_date: anchor,
+        next_charge_date: next_due,
         current_period_start: Time.current,
-        current_period_end: 1.month.from_now,
+        current_period_end: next_due,
         trial_ends_at: nil,
         cancelled_at: nil
       )
-      
+
       user.update!(plan: plan)
       log_info "Assinatura do usuário #{user.id} ativada/renovada com sucesso! Plano: #{plan}"
 

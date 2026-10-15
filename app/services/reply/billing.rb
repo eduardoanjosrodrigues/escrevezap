@@ -115,6 +115,11 @@ module Reply
           inter_txid: result[:txid],
           payer_cpf: cpf,
           payer_name: name,
+          billing_anchor_date: Date.current, # mesmo dia do calendario.dataInicial da rec
+          next_charge_date: nil,
+          inter_cobr_txid: nil,
+          inter_cobr_due_date: nil,
+          inter_cobr_status: nil,
           current_period_start: nil,
           current_period_end: nil
         )
