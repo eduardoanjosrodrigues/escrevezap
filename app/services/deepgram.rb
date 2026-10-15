@@ -55,7 +55,7 @@ class Deepgram
 
   def build_query
     pairs = DEFAULT_PARAMS.map { |k, v| "#{k}=#{v}" }
-    pairs += KEYWORDS.map { |kw| "keywterm=#{URI.encode_www_form_component(kw)}" }
+    pairs += KEYWORDS.map { |kw| "keyterm=#{URI.encode_www_form_component(kw)}" }
     pairs.join("&")
   end
 end

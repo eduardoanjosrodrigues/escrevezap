@@ -27,11 +27,12 @@ module TranscriptionChannels
     end
 
     def finalize(_placeholder_id, text)
-      meta_service.send_message(text)
+      send_text(text)
     end
 
     def send_text(text)
-      meta_service.send_message(text)
+      service = meta_service
+      MessageSplitter.split(text).each { |chunk| service.send_message(chunk) }
     end
 
     private

@@ -30,19 +30,31 @@ module TranscriptionChannels
       @waha_session.waha_client.messaging.download_media_from_url(media_url: @transcription.media_url)
     end
 
+    # Long texts are split: the placeholder is edited with the first chunk and
+    # the remaining chunks go out as new messages.
     def finalize(placeholder_id, text)
+      first, *rest = MessageSplitter.split(text)
+
       if placeholder_id.present?
         @waha_session.waha_client.messaging.edit_message(
           chat_id:    @chat_id,
           message_id: placeholder_id,
-          text:       text
+          text:       first
         )
       else
-        send_text(text)
+        send_chunk(first)
       end
+
+      rest.each { |chunk| send_chunk(chunk) }
     end
 
     def send_text(text)
+      MessageSplitter.split(text).each { |chunk| send_chunk(chunk) }
+    end
+
+    private
+
+    def send_chunk(text)
       @waha_session.waha_client.messaging.send_text(chat_id: @chat_id, text: text)
     end
   end
