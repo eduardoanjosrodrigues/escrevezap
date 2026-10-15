@@ -90,7 +90,12 @@ class WahaSession < ApplicationRecord
     phone = phone_number.to_s.gsub(/\D/, "")
     raise "Número de telefone inválido" if phone.blank?
 
-    unless waha_status == "scan_qr_code"
+    # Confere o status real no Waha: o waha_status local pode estar desatualizado
+    # (ex.: sessão FAILED no Waha e scan_qr_code aqui), e o Waha só aceita pedir
+    # código em SCAN_QR_CODE.
+    live_status = (waha_client.sessions.get rescue nil)&.dig("status")
+
+    unless live_status == "SCAN_QR_CODE"
       begin
         waha_client.sessions.restart
         update!(waha_status: :starting)

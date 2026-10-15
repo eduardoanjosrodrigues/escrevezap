@@ -6,4 +6,14 @@ Sentry.init do |config|
   # but Sentry defaults to only reporting when DSN is present.
   # We can also restrict environments if desired:
   config.enabled_environments = %w[production]
+
+  # A Meta inclui um fbtrace_id único em cada erro, o que faz o mesmo erro virar
+  # uma issue nova a cada ocorrência no Bugsink. Agrupa pela mensagem sem ele.
+  config.before_send = lambda do |event, hint|
+    exception = hint[:exception]
+    if exception.is_a?(ApiRequest::ApiError) && exception.message.include?("graph.facebook.com")
+      event.fingerprint = [ "meta-api", exception.class.name, exception.message.gsub(/"fbtrace_id":"[^"]*"/, "") ]
+    end
+    event
+  end
 end

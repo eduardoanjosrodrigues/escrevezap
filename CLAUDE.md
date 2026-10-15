@@ -1,3 +1,4 @@
 @.agents/rules/core.md
 @.agents/rules/observability.md
 @.agents/rules/production.md
+@.agents/rules/bugsink.md

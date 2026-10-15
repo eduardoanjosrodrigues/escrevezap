@@ -3,6 +3,8 @@ require 'net/http'
 class Deepgram
   include Loggable
 
+  class Error < StandardError; end
+
   attr_reader :duration
 
   def initialize(audio_file_path)
@@ -43,6 +45,10 @@ class Deepgram
     request.body = audio_data
 
     response = http.request(request)
+
+    unless response.is_a?(Net::HTTPSuccess)
+      raise Error, "Deepgram HTTP #{response.code}: #{response.body.to_s.truncate(500)}"
+    end
 
     parsed_response = JSON.parse(response.body)
 

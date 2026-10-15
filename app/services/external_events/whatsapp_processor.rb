@@ -134,6 +134,13 @@ class ExternalEvents::WhatsappProcessor < ExternalEvents::Base
       return
     end
 
+    # Reações em status (stories) não são áudios de conversa e o Waha nem
+    # sempre consegue buscar essas mensagens.
+    if chat_id.start_with?("status@")
+      log_info "Reação ignorada: reação em status"
+      return
+    end
+
     # Avoid re-transcribing the same audio if it was already requested.
     if Transcription.exists?(waha_message_id: message_id,
                              monitored_contact: @waha_session.monitored_contacts)
@@ -245,7 +252,8 @@ class ExternalEvents::WhatsappProcessor < ExternalEvents::Base
     @waha_session.waha_client.messaging.get_message(chat_id: chat_id, message_id: message_id)
   rescue => e
     log_warning "Falha ao buscar mensagem #{message_id}: #{e.class} #{e.message}"
-    Sentry.capture_exception(e)
+    # 404 é esperado (mensagem apagada ou fora do histórico do Waha)
+    Sentry.capture_exception(e) unless e.is_a?(ApiRequest::ApiClientError) && e.message.include?(" 404 ")
     nil
   end
 
