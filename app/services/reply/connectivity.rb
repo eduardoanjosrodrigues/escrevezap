@@ -11,22 +11,25 @@ module Reply
       instructions = <<~MSG
         🔌 *Código de Pareamento Gerado!*
 
-        Insira o código abaixo no seu aplicativo de celular:
-
         Código: ```#{pairing_code}```
 
-        *Passo a passo no seu celular:*
-        1. Abra o WhatsApp e vá em *Configurações* (ou nos três pontinhos).
-        2. Toque em *Aparelhos conectados*.
-        3. Toque em *Conectar um aparelho* e depois em *Conectar com número de telefone*.
-        4. Insira o código ```#{pairing_code}``` acima.
+        ⏱️ *O código expira em cerca de 2 minutos*, então já abra o WhatsApp e insira agora.
 
-        Assim que a conexão for concluída, eu te aviso por aqui! 🚀
+        *Onde inserir o código:*
+        1. Abra o WhatsApp e vá em *Configurações* (ou nos três pontinhos ⋮).
+        2. Toque em *Aparelhos conectados* → *Conectar um aparelho*.
+        3. Toque em *Conectar com número de telefone* (abaixo da câmera do QR code).
+        4. Digite o código ```#{pairing_code}```.
+
+        Se o código expirar, eu te aviso e você pode gerar outro. Assim que a conexão for concluída, eu te aviso por aqui! 🚀
       MSG
 
       send_message(message: instructions)
 
       @current_conversation_state["stage"] = "waiting_for_connection"
+      # Lido pelo PairingCodeExpiredNoticeJob para avisar só quem pediu código
+      # de verdade (e não nos reinícios em massa do WAHA).
+      @current_conversation_state["pairing_code_requested_at"] = Time.current.iso8601
 
       # Send a simple follow-up action list
       send_list_message(

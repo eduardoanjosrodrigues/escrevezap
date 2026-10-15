@@ -95,6 +95,15 @@ module ExternalEvents
           base_payload[:media] = build_media_info(message)
         end
 
+        # Botão de resposta rápida de template: o payload é o id da ação
+        if message[:type] == "button"
+          base_payload[:interactive_reply] = {
+            type: "button",
+            id: message.dig(:button, :payload),
+            title: message.dig(:button, :text)
+          }
+        end
+
         # Capture interactive message reply details
         if message[:type] == "interactive"
           interactive_type = message.dig(:interactive, :type)

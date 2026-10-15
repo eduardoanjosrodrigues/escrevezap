@@ -37,5 +37,32 @@ module Meta
         rendered_message: rendered_message
       }
     end
+
+    # Template UTILITY "whatsapp_desconectado" (pt_BR), cadastrado no WhatsApp
+    # Manager. Corpo sem variáveis e um botão de resposta rápida "Reconectar",
+    # cujo payload (menu_connect) cai direto no fluxo de novo código.
+    def whatsapp_desconectado
+      meta_json = {
+        name: "whatsapp_desconectado",
+        language: {
+          code: "pt_BR"
+        },
+        components: [
+          {
+            type: "button",
+            sub_type: "quick_reply",
+            index: "0",
+            parameters: [ { type: "payload", payload: "menu_connect" } ]
+          }
+        ]
+      }
+
+      rendered_message = "⚠️ Seu WhatsApp foi desconectado do EscreveZap, e seus áudios não estão sendo transcritos no momento.\n\nPara voltar a usar, toque em *Reconectar* abaixo e gere um novo código de conexão.\n\n[Reconectar]"
+
+      {
+        meta_json: meta_json,
+        rendered_message: rendered_message
+      }
+    end
   end
 end

@@ -13,7 +13,7 @@ module Meta
       load_api_request_instance
     end
 
-    def send_template(template_json)
+    def send_template(template_json, rendered_message: nil)
       payload = {
         messaging_product: "whatsapp",
         to: @recipient,
@@ -22,7 +22,7 @@ module Meta
       }
 
       response = @api_request.post("/messages", payload)
-      track_outgoing_message(message_type: :template, body: "Template enviado", metadata: payload, response: response)
+      track_outgoing_message(message_type: :template, body: rendered_message.presence || "Template enviado", metadata: payload, response: response)
     end
 
     def send_message(text)

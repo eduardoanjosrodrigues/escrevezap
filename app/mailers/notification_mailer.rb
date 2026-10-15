@@ -3,9 +3,11 @@
 class NotificationMailer < ApplicationMailer
   helper NotificationMailerHelper
 
-  def notice(user, subject, text)
+  # cta: { label:, url: } — sem cta, o botão leva para a assinatura.
+  def notice(user, subject, text, cta = nil)
     @user = user
     @text = text
+    @cta  = cta
     mail(to: @user.email, subject: subject)
   end
 end

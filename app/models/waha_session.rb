@@ -38,6 +38,7 @@ class WahaSession < ApplicationRecord
 
   after_update_commit :broadcast_status_change,        if: :saved_change_to_waha_status?
   after_update_commit :schedule_disconnect_check,      if: :saved_change_to_waha_status?
+  after_update_commit :schedule_pairing_code_expired_notice, if: :saved_change_to_waha_status?
   after_update_commit :fetch_profile_picture,          if: :saved_change_to_waha_status?
   after_update_commit :complete_user_onboarding,       if: :saved_change_to_waha_status?
   after_update_commit :record_status_event,            if: :saved_change_to_waha_status?
@@ -171,6 +172,15 @@ class WahaSession < ApplicationRecord
     return unless old_status == "working" && new_status != "working"
 
     WahaSessionDisconnectCheckJob.set(wait: 1.minute).perform_later(id)
+  end
+
+  # O código de pareamento expira em ~2min40 e o WAHA leva a sessão para failed.
+  # O job decide se o usuário pediu esse código (e por isso deve ser avisado).
+  def schedule_pairing_code_expired_notice
+    old_status, new_status = saved_change_to_waha_status
+    return unless old_status == "scan_qr_code" && new_status == "failed"
+
+    PairingCodeExpiredNoticeJob.perform_later(id)
   end
 
   def fetch_profile_picture

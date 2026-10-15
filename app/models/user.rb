@@ -87,15 +87,31 @@ class User < ApplicationRecord
 
   # Notificação de conta (pagamento, renovação, expiração...). Quem se cadastrou
   # pelo WhatsApp recebe lá; os demais (Google/email) recebem por email.
-  def notify(subject:, text:)
+  #
+  # template: { meta_json:, rendered_message: } (ver Meta::RenderTemplate). Fora
+  # da janela de 24h a Meta só entrega mensagens iniciadas pela empresa via
+  # template aprovado, então ele é usado no lugar do texto livre nesse caso.
+  # email_cta: { label:, url: } para o botão do email.
+  def notify(subject:, text:, template: nil, email_cta: nil)
     if provider == "phone" && uid.present?
-      Meta::Service.new(recipient: uid).send_message(text)
+      meta = Meta::Service.new(recipient: uid)
+      if template && !whatsapp_window_open?
+        meta.send_template(template[:meta_json], rendered_message: template[:rendered_message])
+      else
+        meta.send_message(text)
+      end
     elsif email.present?
-      NotificationMailer.notice(self, subject, text).deliver_later
+      NotificationMailer.notice(self, subject, text, email_cta).deliver_later
     end
   rescue => e
     Rails.logger.error "[User#notify] Falha ao notificar user #{id}: #{e.message}"
     Sentry.capture_exception(e)
+  end
+
+  # A Meta permite texto livre só até 24h depois da última mensagem do usuário
+  # para o bot. Margem de 1h para não errar por pouco.
+  def whatsapp_window_open?
+    whatsapp_messages.incoming.where(created_at: 23.hours.ago..).exists?
   end
 
   def complete_onboarding!

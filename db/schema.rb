@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_15_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_15_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -225,6 +225,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_120000) do
     t.string "auto_transcribe", default: "never", null: false
     t.string "avatar_url"
     t.datetime "created_at", null: false
+    t.datetime "disconnect_notified_at"
     t.string "display_name"
     t.string "session_name", null: false
     t.string "transcription_mode", default: "reaction", null: false
@@ -238,6 +239,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_120000) do
     t.index ["user_id"], name: "index_waha_sessions_on_user_id", unique: true
   end
 
+  create_table "whatsapp_messages", force: :cascade do |t|
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.string "direction", null: false
+    t.string "from", null: false
+    t.string "message_id"
+    t.string "message_type", default: "text", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.string "phone", null: false
+    t.datetime "sent_at"
+    t.string "to", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["direction"], name: "index_whatsapp_messages_on_direction"
+    t.index ["message_id"], name: "index_whatsapp_messages_on_message_id"
+    t.index ["message_type"], name: "index_whatsapp_messages_on_message_type"
+    t.index ["phone"], name: "index_whatsapp_messages_on_phone"
+    t.index ["sent_at"], name: "index_whatsapp_messages_on_sent_at"
+    t.index ["user_id", "created_at"], name: "index_whatsapp_messages_on_user_id_and_created_at"
+    t.index ["user_id"], name: "index_whatsapp_messages_on_user_id"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "monitored_contacts", "waha_sessions"
@@ -249,4 +272,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_120000) do
   add_foreign_key "usage_events", "users"
   add_foreign_key "waha_session_events", "waha_sessions"
   add_foreign_key "waha_sessions", "users"
+  add_foreign_key "whatsapp_messages", "users"
 end

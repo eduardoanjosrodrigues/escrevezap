@@ -360,3 +360,19 @@ pt-BR:
       outgoing_hint: "Transcreve áudios que você enviar para qualquer contato automaticamente."
       both: "Enviados e recebidos"
       both_hint: "Transcreve todos os áudios de todas as conversas automaticamente."
+
+  # Avisos proativos enviados pelo bot do WhatsApp (ou por email, ver User#notify)
+  whatsapp_notices:
+    pairing_code_expired:
+      body: "⌛ *Seu código de pareamento expirou.*\n\nO WhatsApp só aceita o código por cerca de 2 minutos. Gere um novo e insira logo em seguida em *Aparelhos conectados* → *Conectar com número de telefone*."
+      button: "Opções"
+      section: "Conexão"
+      new_code: "🔄 Gerar novo código"
+      new_code_description: "Receber um código novo agora"
+      cancel: "❌ Cancelar"
+      cancel_description: "Voltar para o menu principal"
+    disconnected:
+      subject: "⚠️ Seu WhatsApp foi desconectado do EscreveZap"
+      text_whatsapp: "⚠️ *Seu WhatsApp foi desconectado do EscreveZap.*\n\nEnquanto estiver desconectado, seus áudios *não serão transcritos*.\n\nPara reconectar, me mande qualquer mensagem aqui e toque em *Conectar WhatsApp* no menu."
+      text_email: "Detectamos que o seu WhatsApp foi desconectado do EscreveZap. Enquanto estiver desconectado, seus áudios *não serão transcritos*.\n\nAcesse o painel e reconecte seu WhatsApp para voltar a usar."
+      email_cta: "Reconectar agora"
