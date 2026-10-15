@@ -62,7 +62,7 @@ module Waha
     #
     # GET /api/sessions/{session}
     def get(name = @session)
-      @api_request.get("/api/sessions/#{name}")
+      JSON.parse(@api_request.get("/api/sessions/#{name}"))
     end
 
     # Start a session (idempotent – safe to call on an already-running session).

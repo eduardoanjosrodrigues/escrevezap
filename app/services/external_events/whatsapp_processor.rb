@@ -252,9 +252,18 @@ class ExternalEvents::WhatsappProcessor < ExternalEvents::Base
     @waha_session.waha_client.messaging.get_message(chat_id: chat_id, message_id: message_id)
   rescue => e
     log_warning "Falha ao buscar mensagem #{message_id}: #{e.class} #{e.message}"
-    # 404 é esperado (mensagem apagada ou fora do histórico do Waha)
-    Sentry.capture_exception(e) unless e.is_a?(ApiRequest::ApiClientError) && e.message.include?(" 404 ")
+    Sentry.capture_exception(e) unless message_not_found_error?(e)
     nil
+  end
+
+  # Mensagem apagada ou fora do histórico do Waha é esperado. O Waha responde
+  # 404, ou 500 com "error getting message by id ... not found".
+  def message_not_found_error?(error)
+    case error
+    when ApiRequest::ApiClientError then error.message.include?(" 404 ")
+    when ApiRequest::ApiServerError then error.message.include?("error getting message by id") && error.message.include?("not found")
+    else false
+    end
   end
 
   # ── Helpers ───────────────────────────────────────────────────────────
