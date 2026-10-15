@@ -12,10 +12,14 @@ Rails.application.routes.draw do
   get "sitemap.xml", to: "seo#sitemap", defaults: { format: "xml" }
   get "llms.txt",    to: "seo#llms",    defaults: { format: "text" }
 
+  # Páginas que disputavam a mesma busca com outra; 301 para a que fica.
+  get "transcrever-audio-whatsapp",              to: redirect("/", status: 301)
+  get "blog/transcricao-whatsapp-vs-escrevezap", to: redirect("/escrevezap-vs-transcricao-whatsapp", status: 301)
+
   # Programmatic SEO landings — slug must exist in SeoPagesController::PAGES.
   # Regex kept inline to avoid autoload coupling at route-load time.
   get "/:slug", to: "seo_pages#show", as: :seo_page,
-                constraints: { slug: /transcrever-audio-whatsapp|converter-audio-em-texto|responder-audio-whatsapp|audio-whatsapp-texto|como-transcrever-audio-de-cliente|como-transcrever-audio-de-reuniao|como-transcrever-audio-de-corretor|como-transcrever-audio-de-advogado|como-transcrever-audio-de-medico|como-transcrever-audio-de-professor|escrevezap-vs-transcricao-whatsapp|transcricao-whatsapp-nao-funciona|transcricao-whatsapp-web/ }
+                constraints: { slug: /converter-audio-em-texto|responder-audio-whatsapp|audio-whatsapp-texto|como-transcrever-audio-de-cliente|como-transcrever-audio-de-reuniao|como-transcrever-audio-de-corretor|como-transcrever-audio-de-advogado|como-transcrever-audio-de-medico|como-transcrever-audio-de-professor|escrevezap-vs-transcricao-whatsapp|transcricao-whatsapp-nao-funciona|transcricao-whatsapp-web/ }
 
   namespace :blog do
     get "/", to: "posts#index", as: :index

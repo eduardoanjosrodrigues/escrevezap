@@ -5,44 +5,6 @@ class SeoPagesController < ApplicationController
   # CTA as the homepage. To add a new keyword landing, add an entry here
   # and a route in `config/routes.rb`. The shared template handles render.
   PAGES = {
-    "transcrever-audio-whatsapp" => {
-      keyword:     "transcrever áudio do WhatsApp",
-      title:       "Transcrever Áudio do WhatsApp em Texto | EscreveZap",
-      description: "Transcreva áudio do WhatsApp em texto em segundos: encaminhe a mensagem de voz para o EscreveZap e leia a transcrição. Sem instalar nada e sem cadastro.",
-      h1:          "Transcrever áudio do WhatsApp em texto",
-      intro:       "Com o EscreveZap, você encaminha o áudio para o nosso número no próprio WhatsApp e, em poucos segundos, recebe o texto na conversa. Sem instalar app, sem cadastro, sem conectar a sua conta.",
-      benefits: [
-        { icon: "ph-lightning",              title: "Transcrição em segundos",   body: "Encaminhou, chegou: o texto aparece na conversa com o EscreveZap." },
-        { icon: "ph-brain",                  title: "IA otimizada para PT-BR",   body: "Pontuação, gírias e formatação pensadas para o português brasileiro." },
-        { icon: "ph-whatsapp-logo",          title: "Tudo dentro do WhatsApp",   body: "Sem app novo, sem cadastro. Basta encaminhar o áudio." },
-        { icon: "ph-arrow-bend-up-right",    title: "Funciona com áudio antigo", body: "Qualquer áudio do histórico pode ser encaminhado e transcrito." }
-      ],
-      steps: [
-        "No WhatsApp, segure o dedo sobre o áudio que você quer transcrever.",
-        "Toque em Encaminhar.",
-        "Escolha o EscreveZap na lista de contatos e envie.",
-        "Em poucos segundos, leia a transcrição na conversa com o EscreveZap."
-      ],
-      faqs: [
-        {
-          question: "Como transcrever áudio do WhatsApp em texto sem instalar nada?",
-          answer:   "Basta encaminhar o áudio para o número do EscreveZap no próprio WhatsApp. Na primeira vez, mande um \"oi\" para o EscreveZap. Não precisa instalar app, extensão nem criar cadastro."
-        },
-        {
-          question: "A transcrição funciona com áudios antigos?",
-          answer:   "Sim. Qualquer áudio que ainda está no seu WhatsApp, mesmo antigo, pode ser encaminhado para o EscreveZap e transcrito na hora."
-        },
-        {
-          question: "A pessoa que mandou o áudio fica sabendo?",
-          answer:   "Não. Quando você encaminha, a transcrição chega só na sua conversa com o EscreveZap. Só você vê. No recurso Transcrever no chat (plano Pro), a transcrição vai como resposta ao áudio e o contato também vê."
-        },
-        {
-          question: "Os áudios são privados?",
-          answer:   "Seus áudios são usados apenas para gerar a sua transcrição e não são compartilhados com terceiros."
-        }
-      ]
-    },
-
     "converter-audio-em-texto" => {
       keyword:     "converter áudio em texto",
       title:       "Converter Áudio em Texto pelo WhatsApp | EscreveZap",

@@ -45,5 +45,19 @@
       <% end %>
     </div>
 
+
+    <nav aria-labelledby="blog-related-title" class="mt-12">
+      <h2 id="blog-related-title" class="text-lg font-bold text-(--color-text) mb-5 text-center">Veja também</h2>
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        <% Blog::PostsController::POSTS.each do |slug, post| %>
+          <% next if slug == @slug %>
+          <%= link_to post[:title], blog_post_path(slug), class: "inline-flex items-center gap-1.5 bg-(--color-surface) hover:bg-(--color-brand-light) border border-gray-200 text-(--color-text) text-sm px-4 py-2 rounded-full transition-colors" %>
+        <% end %>
+        <% SeoPagesController::PAGES.each do |slug, page| %>
+          <%= link_to page[:keyword].capitalize, seo_page_path(slug), class: "inline-flex items-center gap-1.5 bg-(--color-surface) hover:bg-(--color-brand-light) border border-gray-200 text-(--color-text) text-sm px-4 py-2 rounded-full transition-colors" %>
+        <% end %>
+      </div>
+    </nav>
+
   </div>
 </article>

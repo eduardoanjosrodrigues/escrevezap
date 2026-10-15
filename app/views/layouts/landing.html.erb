@@ -91,9 +91,10 @@
 
           <%# Desktop nav %>
           <nav class="hidden md:flex items-center gap-7">
-            <a href="#como-funciona" class="text-sm text-(--color-text-muted) hover:text-(--color-text) transition-colors">Como funciona</a>
-            <a href="#precos"        class="text-sm text-(--color-text-muted) hover:text-(--color-text) transition-colors">Preços</a>
-            <a href="#faq"           class="text-sm text-(--color-text-muted) hover:text-(--color-text) transition-colors">FAQ</a>
+            <a href="/#como-funciona" class="text-sm text-(--color-text-muted) hover:text-(--color-text) transition-colors">Como funciona</a>
+            <a href="/#precos"        class="text-sm text-(--color-text-muted) hover:text-(--color-text) transition-colors">Preços</a>
+            <a href="/#faq"           class="text-sm text-(--color-text-muted) hover:text-(--color-text) transition-colors">FAQ</a>
+            <%= link_to "Blog", blog_index_path, class: "text-sm text-(--color-text-muted) hover:text-(--color-text) transition-colors" %>
           </nav>
 
           <%# Desktop CTA + hamburger %>
@@ -124,9 +125,10 @@
       <%# Mobile dropdown %>
       <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100">
         <div class="max-w-6xl mx-auto px-4 py-3 space-y-1">
-          <a href="#como-funciona" class="block px-3 py-2.5 rounded-lg text-sm text-(--color-text) hover:bg-(--color-surface-soft) transition-colors">Como funciona</a>
-          <a href="#precos"        class="block px-3 py-2.5 rounded-lg text-sm text-(--color-text) hover:bg-(--color-surface-soft) transition-colors">Preços</a>
-          <a href="#faq"           class="block px-3 py-2.5 rounded-lg text-sm text-(--color-text) hover:bg-(--color-surface-soft) transition-colors">FAQ</a>
+          <a href="/#como-funciona" class="block px-3 py-2.5 rounded-lg text-sm text-(--color-text) hover:bg-(--color-surface-soft) transition-colors">Como funciona</a>
+          <a href="/#precos"        class="block px-3 py-2.5 rounded-lg text-sm text-(--color-text) hover:bg-(--color-surface-soft) transition-colors">Preços</a>
+          <a href="/#faq"           class="block px-3 py-2.5 rounded-lg text-sm text-(--color-text) hover:bg-(--color-surface-soft) transition-colors">FAQ</a>
+          <%= link_to "Blog", blog_index_path, class: "block px-3 py-2.5 rounded-lg text-sm text-(--color-text) hover:bg-(--color-surface-soft) transition-colors" %>
           <div class="pt-2 border-t border-gray-100">
             <% if user_signed_in? %>
               <%= link_to "Entrar", authenticated_root_path,
@@ -154,7 +156,7 @@
     <%# ── Footer ──────────────────────────────────────────────────────── %>
     <footer class="bg-white border-t border-gray-100 py-10">
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-8 mb-8">
 
           <%# Brand %>
           <div class="col-span-2 md:col-span-1">
@@ -171,10 +173,26 @@
           <nav aria-label="Recursos" class="text-sm">
             <h2 class="font-semibold text-(--color-text) mb-3">Recursos</h2>
             <ul class="space-y-2 text-(--color-text-muted)">
-              <li><%= link_to "Transcrever áudio do WhatsApp", seo_page_path("transcrever-audio-whatsapp"), class: "hover:text-(--color-text)" %></li>
-              <li><%= link_to "Converter áudio em texto",      seo_page_path("converter-audio-em-texto"),  class: "hover:text-(--color-text)" %></li>
-              <li><%= link_to "Responder áudio do WhatsApp",   seo_page_path("responder-audio-whatsapp"), class: "hover:text-(--color-text)" %></li>
-              <li><%= link_to "Áudio do WhatsApp em texto",    seo_page_path("audio-whatsapp-texto"),     class: "hover:text-(--color-text)" %></li>
+              <li><%= link_to "Áudio do WhatsApp em texto",    seo_page_path("audio-whatsapp-texto"),             class: "hover:text-(--color-text)" %></li>
+              <li><%= link_to "Converter áudio em texto",      seo_page_path("converter-audio-em-texto"),         class: "hover:text-(--color-text)" %></li>
+              <li><%= link_to "Responder áudio do WhatsApp",   seo_page_path("responder-audio-whatsapp"),         class: "hover:text-(--color-text)" %></li>
+              <li><%= link_to "Transcrição no WhatsApp Web",   seo_page_path("transcricao-whatsapp-web"),         class: "hover:text-(--color-text)" %></li>
+              <li><%= link_to "Transcrição do WhatsApp não funciona", seo_page_path("transcricao-whatsapp-nao-funciona"), class: "hover:text-(--color-text)" %></li>
+              <li><%= link_to "EscreveZap vs transcrição nativa", seo_page_path("escrevezap-vs-transcricao-whatsapp"), class: "hover:text-(--color-text)" %></li>
+              <li><%= link_to "Transcrever arquivo de áudio",  free_tool_path,                                    class: "hover:text-(--color-text)" %></li>
+            </ul>
+          </nav>
+
+          <%# Para profissionais %>
+          <nav aria-label="Para profissionais" class="text-sm">
+            <h2 class="font-semibold text-(--color-text) mb-3">Para profissionais</h2>
+            <ul class="space-y-2 text-(--color-text-muted)">
+              <li><%= link_to "Áudio de cliente",  seo_page_path("como-transcrever-audio-de-cliente"),   class: "hover:text-(--color-text)" %></li>
+              <li><%= link_to "Áudio de reunião",  seo_page_path("como-transcrever-audio-de-reuniao"),   class: "hover:text-(--color-text)" %></li>
+              <li><%= link_to "Corretores",        seo_page_path("como-transcrever-audio-de-corretor"),  class: "hover:text-(--color-text)" %></li>
+              <li><%= link_to "Advogados",         seo_page_path("como-transcrever-audio-de-advogado"),  class: "hover:text-(--color-text)" %></li>
+              <li><%= link_to "Médicos",           seo_page_path("como-transcrever-audio-de-medico"),    class: "hover:text-(--color-text)" %></li>
+              <li><%= link_to "Professores",       seo_page_path("como-transcrever-audio-de-professor"), class: "hover:text-(--color-text)" %></li>
             </ul>
           </nav>
 
@@ -184,7 +202,7 @@
             <ul class="space-y-2 text-(--color-text-muted)">
               <li><a href="/#como-funciona" class="hover:text-(--color-text)">Como funciona</a></li>
               <li><%= link_to "Preços", pricing_path, class: "hover:text-(--color-text)" %></li>
-              <li><a href="/#testar" class="hover:text-(--color-text)">Testar o motor</a></li>
+              <li><%= link_to "Blog", blog_index_path, class: "hover:text-(--color-text)" %></li>
               <li><a href="/#faq" class="hover:text-(--color-text)">Perguntas frequentes</a></li>
             </ul>
           </nav>
@@ -227,6 +245,20 @@
           });
         });
       })();
+    </script>
+    <script>
+      // Eventos de conversão no Umami: qualquer clique que leva ao WhatsApp
+      // oficial ou ao login, com a página de origem e o texto do botão.
+      document.addEventListener('click', function(e) {
+        var a = e.target.closest && e.target.closest('a[href]');
+        if (!a || !window.umami) return;
+        var href = a.getAttribute('href');
+        var name = href.indexOf('wa.me/') !== -1 ? 'cta-whatsapp'
+                 : href.indexOf('/app/entrar') === 0 ? 'cta-entrar'
+                 : null;
+        if (!name) return;
+        window.umami.track(name, { page: location.pathname, label: a.textContent.trim().slice(0, 40) });
+      });
     </script>
     <%= render "shared/notyf" %>
   </body>

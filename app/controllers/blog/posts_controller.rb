@@ -63,27 +63,6 @@ module Blog
           <p class="mb-4">Essa funcionalidade tem salvado horas de vida de profissionais como advogados, corretores de imóveis e vendedores, que lidam com clientes prolixos diariamente.</p>
         HTML
       },
-      "transcricao-whatsapp-vs-escrevezap" => {
-        title: "Transcrição do WhatsApp vs EscreveZap: Qual é Melhor?",
-        description: "Uma comparação detalhada entre a transcrição nativa do WhatsApp e o EscreveZap com inteligência artificial avançada.",
-        author: "Equipe EscreveZap",
-        date: "2026-06-21",
-        content: <<~HTML
-          <p class="mb-4">Com a introdução da transcrição nativa no WhatsApp, muitos se perguntam: ainda vale a pena usar uma ferramenta dedicada como o EscreveZap?</p>
-          <p class="mb-4">A resposta curta é: depende da sua necessidade de uso.</p>
-          <h2 class="text-2xl font-bold text-(--color-text) mt-8 mb-4">A Transcrição Nativa do WhatsApp</h2>
-          <p class="mb-4">É gratuita e já vem embutida no aplicativo. É excelente para o usuário casual que precisa de vez em quando ler um áudio de 15 segundos da mãe. No entanto, ela peca na formatação (muitas vezes é um bloco gigante de texto sem pontuação) e pode falhar em sotaques mais densos ou palavras técnicas.</p>
-          <h2 class="text-2xl font-bold text-(--color-text) mt-8 mb-4">A Transcrição do EscreveZap</h2>
-          <p class="mb-4">Desenhada para uso profissional ou para quem lida com alto volume de áudios. Suas vantagens incluem:</p>
-          <ul class="list-disc pl-6 mb-6 space-y-2">
-            <li><strong>IA de Ponta:</strong> Maior precisão em português do Brasil e termos técnicos.</li>
-            <li><strong>Formatação:</strong> O texto vem com pontuação correta e dividido em parágrafos.</li>
-            <li><strong>Resumos (Pro):</strong> Áudios longos são resumidos antes da transcrição.</li>
-            <li><strong>Flexibilidade:</strong> Funciona em qualquer aparelho, inclusive no WhatsApp Web/Desktop: basta encaminhar o áudio. No Pro, você também pode reagir ao áudio com um emoji para a transcrição ir como resposta na conversa.</li>
-          </ul>
-          <p class="mb-4">Se o seu WhatsApp é sua ferramenta de trabalho, uma transcrição confiável é um investimento que se paga em poucos dias com o tempo economizado.</p>
-        HTML
-      },
       "como-transformar-audio-em-texto" => {
         title: "Como Transformar Áudio em Texto Rapidamente",
         description: "As melhores ferramentas e métodos para transformar voz em texto, com foco na agilidade e precisão no WhatsApp.",

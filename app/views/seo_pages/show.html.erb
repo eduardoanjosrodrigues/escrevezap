@@ -144,6 +144,10 @@
         <%= link_to data[:keyword].capitalize, seo_page_path(slug),
               class: "inline-flex items-center gap-1.5 bg-(--color-surface) hover:bg-(--color-brand-light) border border-gray-200 text-(--color-text) text-sm px-4 py-2 rounded-full transition-colors" %>
       <% end %>
+      <% Blog::PostsController::POSTS.each do |slug, post| %>
+        <%= link_to post[:title], blog_post_path(slug),
+              class: "inline-flex items-center gap-1.5 bg-(--color-surface) hover:bg-(--color-brand-light) border border-gray-200 text-(--color-text) text-sm px-4 py-2 rounded-full transition-colors" %>
+      <% end %>
     </div>
   </div>
 </section>
