@@ -15,6 +15,21 @@ services:
         max-size: "10m"
         max-file: "10"
     restart: unless-stopped
+    # Usado pelo deploy.sh: o container novo só recebe tráfego no lugar do
+    # antigo depois que o Puma responde de verdade (não só o Thruster).
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://localhost/up"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 120s
+      start_interval: 2s
+    # "edge" é a rede que o cloudflared enxerga. O deploy.sh tira o container
+    # novo dela até o Puma estar pronto, para o túnel não mandar tráfego para
+    # um container que ainda está subindo.
+    networks:
+      - default
+      - edge
 
   worker:
     build: .
@@ -68,6 +83,9 @@ services:
     depends_on:
       - redis
       - db-waha
+    networks:
+      - default
+      - edge
     restart: unless-stopped
 
   db-waha:
@@ -82,6 +100,8 @@ services:
   cloudflared:
     image: cloudflare/cloudflared:latest
     command: tunnel --no-autoupdate run
+    networks:
+      - edge
     environment:
       - TUNNEL_TOKEN=eyJhIjoiNGJiN2RkY2JhMTMyMjg1NmVlNWMzNzViMzBmZWMzOTIiLCJ0IjoiODA5ZDVkYTgtM2E3Mi00MjFjLWI0MWItNGVjZjAwYWUyNjQyIiwicyI6Ik9UaGlNRFExWXpFdE5XWTFaUzAwTW1SbExXSmxOV0V0Wm1NNE4yRmhabVZrT0RrNCJ9
     restart: unless-stopped
@@ -143,6 +163,10 @@ services:
   #       max-file: "10"
 
     # admin | 12345678
+
+networks:
+  default:
+  edge:
 
 volumes:
   db-volume:

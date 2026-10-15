@@ -30,31 +30,72 @@ git pull || fail "git pull failed"
 ok "Code up to date — $(git log -1 --format='%h %s')"
 echo ""
 
-# ── Step 2: Build & start containers ─────────────────────────────────────────
-info "Building images and starting containers..."
-docker compose -f docker-compose-production.yml up --build -d || fail "docker compose failed"
+DC="docker compose -f docker-compose-production.yml"
+
+# ── Step 2: Build images (site keeps running on the old container) ──────────
+info "Building images..."
+$DC build || fail "docker compose build failed"
+ok "Images built"
 echo ""
 
-# ── Step 3: Health check ──────────────────────────────────────────────────────
-info "Waiting for web container to become healthy..."
-for i in $(seq 1 12); do
-  STATUS=$(docker compose -f docker-compose-production.yml ps --format json web 2>/dev/null \
-    | grep -o '"Health":"[^"]*"' | head -1 | cut -d'"' -f4 || echo "")
-  STATE=$(docker compose -f docker-compose-production.yml ps --format json web 2>/dev/null \
-    | grep -o '"State":"[^"]*"' | head -1 | cut -d'"' -f4 || echo "")
-  if [[ "$STATE" == "running" ]]; then
-    ok "Container web is running"
-    break
-  fi
-  echo -e "  ${DIM}  attempt $i/12 — state: ${STATE:-unknown}...${RESET}"
-  sleep 5
-  [[ $i -eq 12 ]] && warn "Container did not report healthy after 60s — check logs"
+# ── Step 3: Rolling swap of web (no downtime) ─────────────────────────────────
+# cloudflared reaches the app as http://web on the "edge" network. The new
+# container is created outside "edge", boots (db:prepare + Puma) while the old
+# one keeps serving, and only joins "edge" once /up answers. Then the old one
+# is stopped gracefully. Recreating in place left the site down while Rails
+# booted, and Thruster answers 502 for a few seconds before Puma is ready.
+OLD_WEB=$($DC ps -q web)
+
+info "Creating new web container (outside the tunnel network)..."
+$DC up --no-start --no-deps --no-recreate --scale web=$(( $(echo "$OLD_WEB" | grep -c .) + 1 )) web \
+  || fail "could not create new web container"
+NEW_WEB=$($DC ps -a -q web | grep -vxF "${OLD_WEB:-none}" | head -1)
+[[ -n "$NEW_WEB" ]] || fail "new web container not found"
+EDGE_NET="$(docker inspect -f '{{index .Config.Labels "com.docker.compose.project"}}' "$NEW_WEB")_edge"
+docker network disconnect "$EDGE_NET" "$NEW_WEB" >/dev/null 2>&1 || true
+docker start "$NEW_WEB" >/dev/null || fail "could not start new web container"
+
+info "Waiting for new web container to become healthy..."
+HEALTH=""
+for i in $(seq 1 60); do
+  HEALTH=$(docker inspect --format '{{.State.Health.Status}}' "$NEW_WEB" 2>/dev/null || echo "missing")
+  [[ "$HEALTH" == "healthy" ]] && break
+  if [[ "$HEALTH" == "unhealthy" || "$HEALTH" == "missing" ]]; then break; fi
+  echo -e "  ${DIM}  attempt $i/60 — health: ${HEALTH}...${RESET}"
+  sleep 3
 done
+
+if [[ "$HEALTH" != "healthy" ]]; then
+  warn "New web container is ${HEALTH:-not healthy} — rolling back, old one stays live"
+  docker logs --tail 50 "$NEW_WEB" 2>&1 || true
+  docker rm -f "$NEW_WEB" >/dev/null 2>&1 || true
+  fail "Deploy aborted (site still on previous version)"
+fi
+ok "New web container is healthy"
+
+info "Putting new web container behind the tunnel..."
+docker network connect --alias web "$EDGE_NET" "$NEW_WEB" || fail "could not attach new web to $EDGE_NET"
+
+if [[ -n "$OLD_WEB" ]]; then
+  info "Stopping old web container..."
+  for id in $OLD_WEB; do
+    # SIGTERM: Thruster/Puma stop accepting and finish in-flight requests;
+    # cloudflared falls back to the new container on connection refused.
+    docker stop --time 30 "$id" >/dev/null && docker rm "$id" >/dev/null
+  done
+  ok "Old web container removed"
+fi
 echo ""
 
-# ── Step 4: Show running services ────────────────────────────────────────────
+# ── Step 4: Update the other services (worker, etc.) ──────────────────────────
+info "Updating remaining services..."
+OTHERS=$($DC config --services | grep -vx web)
+$DC up -d --no-deps $OTHERS || fail "docker compose up failed"
+echo ""
+
+# ── Step 5: Show running services ────────────────────────────────────────────
 info "Running services:"
-docker compose -f docker-compose-production.yml ps --format "table {{.Name}}\t{{.Status}}" \
+$DC ps --format "table {{.Name}}\t{{.Status}}" \
   | tail -n +2 \
   | while IFS= read -r line; do
       if echo "$line" | grep -q "Up\|running"; then
