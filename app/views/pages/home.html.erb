@@ -5,6 +5,7 @@
 <% content_for :description, "Transcreva áudios do WhatsApp em texto: encaminhe o áudio para o EscreveZap e receba a transcrição em segundos, sem instalar nada. No Pro, a transcrição aparece direto na conversa." %>
 <% content_for :jsonld do %>
   <%= faq_jsonld(HomeContent::FAQS) %>
+  <%= howto_jsonld(name: "Como transcrever um áudio do WhatsApp em texto", steps: HomeContent::HOW_TO_STEPS) %>
 <% end %>
 
 <%# ============================================================== %>

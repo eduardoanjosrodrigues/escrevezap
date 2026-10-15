@@ -31,7 +31,7 @@ module HomeContent
     },
     {
       question: "Meus áudios e conversas são privados?",
-      answer:   "Sim. Os áudios são processados de forma segura e não são armazenados após a transcrição. Sua conversa do WhatsApp continua sendo sua."
+      answer:   "Sim. Seus áudios são usados apenas para gerar a sua transcrição e não são compartilhados com terceiros. Quando você encaminha um áudio, só você vê a transcrição."
     },
     {
       question: "Quanto custa para transcrever áudios do WhatsApp?",
@@ -41,6 +41,12 @@ module HomeContent
       question: "Posso cancelar quando quiser?",
       answer:   "Sim. Sem fidelidade e sem burocracia. Você cancela a qualquer momento e continua usando até o fim do período já pago."
     }
+  ].freeze
+
+  HOW_TO_STEPS = [
+    { name: "Segure o áudio",              text: "No WhatsApp, segure a mensagem de voz que você quer ler, em qualquer conversa." },
+    { name: "Encaminhe para o EscreveZap", text: "Toque em Encaminhar e escolha o EscreveZap. Na primeira vez, mande um oi para salvar o contato." },
+    { name: "Leia a transcrição",          text: "Em poucos segundos o texto chega na conversa com o EscreveZap. Só você vê." }
   ].freeze
 
   USE_CASES = [

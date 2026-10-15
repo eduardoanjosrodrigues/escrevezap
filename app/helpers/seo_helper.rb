@@ -5,8 +5,8 @@ module SeoHelper
   # ─────────────────────────────────────────────────────────────────────
   SITE_NAME    = "EscreveZap".freeze
   SITE_URL     = "https://escrevezap.com.br".freeze
-  SITE_TAGLINE = "Transcrição automática de áudios do WhatsApp".freeze
-  DEFAULT_DESCRIPTION = "EscreveZap transcreve automaticamente os áudios do WhatsApp em texto e responde direto na conversa. Leia mensagens de voz em segundos, sem trocar de conversa.".freeze
+  SITE_TAGLINE = "Transcreva áudios do WhatsApp em texto".freeze
+  DEFAULT_DESCRIPTION = "Encaminhe o áudio do WhatsApp para o EscreveZap e receba a transcrição em texto em segundos, sem instalar nada. Grátis para começar.".freeze
   DEFAULT_OG_IMAGE = "/og-image-new.png".freeze
   SOCIAL_TWITTER   = "@escrevezap".freeze
 
@@ -109,12 +109,7 @@ module SeoHelper
         { "@type" => "Offer", "name" => "Gratuito", "price" => "0",     "priceCurrency" => "BRL" },
         { "@type" => "Offer", "name" => "Basic",    "price" => "5.99",  "priceCurrency" => "BRL" },
         { "@type" => "Offer", "name" => "Pro",      "price" => "19.90", "priceCurrency" => "BRL" }
-      ],
-      "aggregateRating" => {
-        "@type"       => "AggregateRating",
-        "ratingValue" => "4.8",
-        "ratingCount" => "127"
-      }
+      ]
     )
   end
 
@@ -134,6 +129,20 @@ module SeoHelper
             "text"  => f[:answer]
           }
         }
+      }
+    )
+  end
+
+  # Pass a name and an array of {name:, text:} steps.
+  def howto_jsonld(name:, steps:)
+    jsonld_tag(
+      "@context" => "https://schema.org",
+      "@type"    => "HowTo",
+      "name"     => name,
+      "inLanguage" => "pt-BR",
+      "totalTime"  => "PT1M",
+      "step"     => steps.each_with_index.map { |step, idx|
+        { "@type" => "HowToStep", "position" => idx + 1, "name" => step[:name], "text" => step[:text] }
       }
     )
   end

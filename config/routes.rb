@@ -10,6 +10,7 @@ Rails.application.routes.draw do
   # Dynamic robots.txt + sitemap.xml + programmatic SEO landings.
   get "robots.txt",  to: "seo#robots",  defaults: { format: "text" }
   get "sitemap.xml", to: "seo#sitemap", defaults: { format: "xml" }
+  get "llms.txt",    to: "seo#llms",    defaults: { format: "text" }
 
   # Programmatic SEO landings — slug must exist in SeoPagesController::PAGES.
   # Regex kept inline to avoid autoload coupling at route-load time.
