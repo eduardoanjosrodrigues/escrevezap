@@ -25,6 +25,10 @@ class User < ApplicationRecord
 
   TRANSCRIPTION_LIMITS = { "free" => 20, "basic" => 500, "pro" => 2_000 }.freeze
 
+  # Transcrever por reação (WhatsApp conectado) é recurso Pro: os outros planos
+  # podem testar até este limite por mês e continuam encaminhando áudios ao bot.
+  REACTION_TRIAL_LIMIT = 20
+
   def self.from_google(auth)
     # Try to find by provider/uid first (returning user via Google)
     user = find_by(provider: auth.provider, uid: auth.uid)
@@ -63,12 +67,18 @@ class User < ApplicationRecord
     TRANSCRIPTION_LIMITS.fetch(plan, 20)
   end
 
-  def monthly_transcriptions_used
-    waha_session&.monthly_transcription_count || 0
+  def monthly_transcriptions_used(excluding: nil)
+    waha_session&.monthly_transcription_count(excluding: excluding) || 0
   end
 
-  def transcription_limit_reached?
-    monthly_transcriptions_used >= transcription_limit
+  def transcription_limit_reached?(excluding: nil)
+    monthly_transcriptions_used(excluding: excluding) >= transcription_limit
+  end
+
+  def reaction_limit_reached?(excluding: nil)
+    return false if plan == "pro" || waha_session.nil?
+
+    waha_session.monthly_transcriptions(excluding: excluding).waha.count >= REACTION_TRIAL_LIMIT
   end
 
   def active_subscriber?

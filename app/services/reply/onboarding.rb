@@ -2,8 +2,10 @@ module Reply
   module Onboarding
     private
 
+    # Quem já recebeu as boas-vindas vai direto pro menu: o fluxo principal
+    # (encaminhar áudio) não depende de conectar o WhatsApp.
     def show_menu
-      if @user.onboarding_completed?
+      if @user.onboarding_completed? || @current_conversation_state["welcomed_at"].present?
         send_main_menu
       else
         start_onboarding
@@ -12,7 +14,7 @@ module Reply
 
     def start_onboarding
       first_message = "Oi *#{@display_name || 'Usuário'}*, seja bem-vindo ao EscreveZap! 👋"
-      second_message = "Eu transcrevo áudios de WhatsApp de forma super simples, basta reagir com qualquer emoji ao áudio na própria conversa que eu gero a transcrição e mando lá mesmo!"
+      second_message = "É só *encaminhar um áudio para mim* que eu te devolvo a transcrição aqui em poucos segundos. Pode testar agora! 🎙️"
 
       send_message(message: first_message)
       sleep 0.5.seconds
@@ -20,14 +22,14 @@ module Reply
       sleep 0.5.seconds
 
       send_list_message(
-        body_text: "Para começar a usar, você só precisa conectar seu WhatsApp ao nosso servidor. Escolha uma opção:",
+        body_text: "Quer mais? No recurso *Transcrever no chat*, você reage a um áudio com qualquer emoji e a transcrição aparece na própria conversa.",
         button_text: "Ver opções",
         sections: [
           {
             title: "Introdução",
             rows: [
-              { id: "onboarding_connect", title: "🔌 Conectar WhatsApp", description: "Conectar seu celular (Recomendado)" },
-              { id: "onboarding_how", title: "❓ Como funciona?", description: "Ver instruções detalhadas de uso" },
+              { id: "onboarding_how", title: "❓ Como funciona?", description: "Ver instruções de uso" },
+              { id: "onboarding_connect", title: "⚡ Transcrever no chat", description: "Recurso Pro · teste grátis até 20 por mês" },
               { id: "onboarding_plans", title: "💵 Planos e Preços", description: "Ver limites de transcrição e planos" }
             ]
           }
@@ -35,6 +37,7 @@ module Reply
       )
 
       @current_conversation_state["stage"] = "initial"
+      @current_conversation_state["welcomed_at"] = Time.current
     end
 
     def send_main_menu
@@ -45,7 +48,7 @@ module Reply
       if @session.working?
         whatsapp_rows << { id: "menu_disconnect_prompt", title: "🔌 Desconectar", description: "Desconectar seu WhatsApp" }
       else
-        whatsapp_rows << { id: "menu_connect", title: "🔌 Conectar WhatsApp", description: "Gerar código de pareamento" }
+        whatsapp_rows << { id: "menu_connect", title: "⚡ Transcrever no chat", description: "Recurso Pro · teste grátis até 20 por mês" }
       end
 
       send_list_message(
@@ -80,12 +83,12 @@ module Reply
       how_text = <<~MSG
         ❓ *Como funciona o EscreveZap?*
 
-        1. Quando alguém te enviar um áudio (ou você enviar um), basta *reagir ao áudio com qualquer emoji* (ex: 👀, 👍, ❤️).
-        2. Eu vou ler o áudio e em poucos segundos respondo no mesmo chat com a transcrição completa.
+        🎙️ *Encaminhe o áudio para mim:* segure o áudio em qualquer conversa, toque em *Encaminhar* e escolha o EscreveZap. Em poucos segundos eu respondo aqui com a transcrição.
 
-        Simples assim! Sem precisar abrir nenhum site ou painel. ⚡
+        ⚡ *Transcrever no chat (recurso Pro):* conecte seu WhatsApp e reaja a qualquer áudio com um emoji (👀, 👍, ❤️). A transcrição aparece como resposta na própria conversa, e o seu contato também vê. Todos os planos podem testar até 20 por mês.
+
+        Simples assim! Sem precisar abrir nenhum site ou painel.
       MSG
-      # 3. Você também pode *encaminhar um áudio* para esta conversa comigo, e eu transcrevo ele aqui na hora!
 
       send_cta_url_message(
         body_text: how_text,
@@ -108,7 +111,10 @@ module Reply
 
         *3. Pro (R$ 19,90/mês)*
         - 2.000 transcrições por mês
+        - *Transcrever no chat* sem limite de teste
         - Formatação inteligente com IA
+
+        _Em todos os planos você pode testar o Transcrever no chat (reagir ao áudio) até 20 vezes por mês._
       MSG
 
       send_message(message: plans_text)

@@ -37,7 +37,7 @@ module Reply
 
       rows = []
       rows << { id: "upgrade_basic", title: "Assinar Basic (R$5,99)", description: "500 transcrições/mês" } if plan != "basic"
-      rows << { id: "upgrade_pro", title: "Assinar Pro (R$19,90)", description: "2.000 transcrições/mês + IA" } if plan != "pro"
+      rows << { id: "upgrade_pro", title: "Assinar Pro (R$19,90)", description: "2.000/mês + Transcrever no chat + IA" } if plan != "pro"
       rows << { id: "cancel_subscription", title: "Cancelar Assinatura", description: "Voltar ao plano gratuito" } if @user.subscription&.active_or_trialing?
       rows << { id: "cancel_connection", title: "❌ Voltar ao Menu", description: "Voltar para o menu principal" }
 

@@ -171,14 +171,23 @@ class TranscribeAudioJob < ApplicationJob
     # Guard: transport must be ready (e.g. Waha session connected)
     unless channel.ready?
       Rails.logger.warn "[TranscribeAudioJob] Canal não pronto para transcription #{transcription.id} — skipping"
+      fail_transcription!(transcription, "Canal não pronto")
       return
     end
 
     # Guard: monthly limit
-    if user.transcription_limit_reached?
+    if user.transcription_limit_reached?(excluding: transcription)
       Rails.logger.info "[TranscribeAudioJob] Limite mensal atingido para user #{user.id} — skipping"
-      send_limit_reached_notice(channel, user)
+      send_limit_reached_notice(transcription, channel, user)
       fail_transcription!(transcription, "Limite mensal de transcrições atingido")
+      return
+    end
+
+    # Guard: reaction trial limit (transcrição por reação é recurso Pro)
+    if transcription.waha? && user.reaction_limit_reached?(excluding: transcription)
+      Rails.logger.info "[TranscribeAudioJob] Limite de reação atingido para user #{user.id} — skipping"
+      send_reaction_limit_notice(user)
+      fail_transcription!(transcription, "Limite mensal de transcrições por reação atingido")
       return
     end
 
@@ -465,18 +474,25 @@ class TranscribeAudioJob < ApplicationJob
     transcription.update!(status: :failed, error_message: message)
   end
 
-  def send_limit_reached_notice(channel, user)
+  def send_limit_reached_notice(transcription, channel, user)
     # Mensagem no WhatsApp (sem link)
     text = "⚠️ *Seu limite de transcrições do EscreveZap foi atingido este mês.*\n\n" \
            "Você usou todas as #{user.transcription_limit} transcrições do plano #{user.plan.capitalize}.\n\n" \
            "Para continuar recebendo transcrições, atualize seu plano.\n\n" \
            "_via EscreveZap_"
 
-    begin
-      channel.send_text(text)
-    rescue => e
-      Rails.logger.warn "[TranscribeAudioJob] Failed to send limit notice via WA: #{e.message}"
-      Sentry.capture_exception(e)
+    # No canal conectado o aviso iria para a conversa com o contato, então vai
+    # pelo bot (quem não é usuário de WhatsApp já recebe o email abaixo); no
+    # canal direto o próprio chat já é com o bot.
+    if transcription.waha?
+      user.notify(subject: "Limite de transcrições atingido", text: text) if user.provider == "phone"
+    else
+      begin
+        channel.send_text(text)
+      rescue => e
+        Rails.logger.warn "[TranscribeAudioJob] Failed to send limit notice via WA: #{e.message}"
+        Sentry.capture_exception(e)
+      end
     end
 
     # Push Notification (com link pro billing)
@@ -492,5 +508,14 @@ class TranscribeAudioJob < ApplicationJob
 
     # Email (com link pro billing)
     UsageMailer.limit_reached(user).deliver_later
+  end
+
+  def send_reaction_limit_notice(user)
+    text = "⚡ *Você usou as #{User::REACTION_TRIAL_LIMIT} transcrições por reação deste mês.*\n\n" \
+           "Transcrever direto nas conversas é um recurso do plano *Pro*. " \
+           "Enquanto isso, é só *encaminhar o áudio para mim* que eu transcrevo aqui.\n\n" \
+           "Para assinar o Pro, toque em *💳 Plano e Faturamento* no menu."
+
+    user.notify(subject: "Limite de transcrições por reação atingido", text: text)
   end
 end

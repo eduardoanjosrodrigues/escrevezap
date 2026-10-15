@@ -7,11 +7,15 @@ module HomeContent
   FAQS = [
     {
       question: "Como transcrever áudio do WhatsApp em texto?",
-      answer:   "Conecte seu WhatsApp ao EscreveZap digitando seu número para gerar um código de 8 dígitos, confirme no seu WhatsApp e pronto: basta reagir com qualquer emoji a qualquer áudio recebido ou enviado, e a transcrição aparece como resposta na própria conversa."
+      answer:   "Encaminhe o áudio para o EscreveZap no próprio WhatsApp e, em poucos segundos, a transcrição chega na conversa. Não precisa instalar nada nem conectar sua conta."
     },
     {
-      question: "Isso usa meu próprio WhatsApp?",
-      answer:   "Sim. Você conecta sua conta pessoal via código de vinculação. O EscreveZap funciona como um dispositivo vinculado ao seu WhatsApp, sem criar um número novo e sem precisar trocar o seu."
+      question: "O que é o Transcrever no chat?",
+      answer:   "É o recurso Pro em que você conecta seu WhatsApp ao EscreveZap como um dispositivo vinculado e reage com qualquer emoji a um áudio. A transcrição aparece como resposta na própria conversa, sem precisar encaminhar. Todos os planos podem testar até 20 vezes por mês."
+    },
+    {
+      question: "No Transcrever no chat, a outra pessoa vê a transcrição?",
+      answer:   "Sim. A transcrição é enviada como resposta ao áudio na própria conversa, então o contato também vê. Se preferir que só você veja, encaminhe o áudio para o EscreveZap."
     },
     {
       question: "Preciso trocar de número de telefone?",
@@ -19,7 +23,7 @@ module HomeContent
     },
     {
       question: "Posso escolher quais conversas serão transcritas?",
-      answer:   "Sim. O EscreveZap só transcreve os áudios que você sinalizar reagindo com um emoji. Você tem controle total e individual de quais áudios são transcritos."
+      answer:   "Sim. O EscreveZap só transcreve os áudios que você encaminha para ele ou, no Transcrever no chat, os que você reage com um emoji. Você decide áudio por áudio."
     },
     {
       question: "Como funciona o resumo inteligente dos áudios?",
@@ -31,7 +35,7 @@ module HomeContent
     },
     {
       question: "Quanto custa para transcrever áudios do WhatsApp?",
-      answer:   "Você pode começar de graça com 20 transcrições por mês. O plano Basic custa R$ 5,99/mês com 500 transcrições e o plano Pro custa R$ 19,90/mês com 2.000 transcrições e resumo com IA."
+      answer:   "Você pode começar de graça com 20 transcrições por mês. O plano Basic custa R$ 5,99/mês com 500 transcrições e o plano Pro custa R$ 19,90/mês com 2.000 transcrições, Transcrever no chat e resumo com IA."
     },
     {
       question: "Posso cancelar quando quiser?",
@@ -51,8 +55,8 @@ module HomeContent
   ].freeze
 
   COMPARISON_ROWS = [
-    { feature: "Transcrição com uma reação",        whatsapp: false, escrevezap: true },
-    { feature: "Resposta direto na conversa",       whatsapp: false, escrevezap: true },
+    { feature: "Transcrição encaminhando o áudio",  whatsapp: false, escrevezap: true },
+    { feature: "Transcrição com uma reação (Pro)",  whatsapp: false, escrevezap: true },
     { feature: "Resumo do áudio com IA",            whatsapp: false, escrevezap: true },
     { feature: "Funciona em qualquer conversa",     whatsapp: false, escrevezap: true },
     { feature: "Controle manual por áudio",         whatsapp: false, escrevezap: true },

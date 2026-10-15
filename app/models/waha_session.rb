@@ -141,11 +141,19 @@ class WahaSession < ApplicationRecord
     end
   end
 
-  # Number of transcriptions processed this calendar month (excludes failed).
-  def monthly_transcription_count
-    transcriptions.where("transcriptions.created_at >= ?", Time.current.beginning_of_month)
-                  .where.not(status: :failed)
-                  .count
+  # Transcriptions that count toward this month's quota. Failed ones don't, and
+  # neither do ones stuck in processing for over an hour (abandoned jobs).
+  # `excluding` leaves out the transcription whose quota is being checked, so
+  # the 20th audio of a 20/month plan still goes through.
+  def monthly_transcriptions(excluding: nil)
+    scope = transcriptions.this_month
+                          .where.not(status: :failed)
+                          .where("transcriptions.status <> 'processing' OR transcriptions.created_at > ?", 1.hour.ago)
+    excluding ? scope.where.not(id: excluding.id) : scope
+  end
+
+  def monthly_transcription_count(excluding: nil)
+    monthly_transcriptions(excluding: excluding).count
   end
 
   private
