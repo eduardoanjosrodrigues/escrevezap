@@ -36,7 +36,7 @@ module Reply
       case action_id
       # Onboarding actions
       when "onboarding_connect"
-        start_connection_flow
+        show_connection_instructions
       when "onboarding_how"
         show_how_it_works
       when "onboarding_plans"
@@ -46,7 +46,7 @@ module Reply
       when "menu_status"
         show_connection_status
       when "menu_connect"
-        start_connection_flow
+        show_connection_instructions
       when "menu_billing"
         show_billing
       when "menu_help"
@@ -55,6 +55,8 @@ module Reply
         show_support
 
       # Connection tracking actions
+      when "pairing_ready"
+        start_connection_flow
       when "verify_connection"
         verify_session_connection
       when "cancel_connection"

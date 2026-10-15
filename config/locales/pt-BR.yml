@@ -364,7 +364,7 @@ pt-BR:
   # Avisos proativos enviados pelo bot do WhatsApp (ou por email, ver User#notify)
   whatsapp_notices:
     pairing_code_expired:
-      body: "⌛ *Seu código de pareamento expirou.*\n\nO WhatsApp só aceita o código por cerca de 2 minutos. Gere um novo e insira logo em seguida em *Aparelhos conectados* → *Conectar com número de telefone*."
+      body: "⌛ *Seu código de pareamento expirou.*\n\nO WhatsApp só aceita o código por cerca de 2 minutos. Deixe o celular na tela *Aparelhos conectados* → *Conectar com número de telefone* e só então peça um novo código."
       button: "Opções"
       section: "Conexão"
       new_code: "🔄 Gerar novo código"
@@ -373,6 +373,6 @@ pt-BR:
       cancel_description: "Voltar para o menu principal"
     disconnected:
       subject: "⚠️ Seu WhatsApp foi desconectado do EscreveZap"
-      text_whatsapp: "⚠️ *Seu WhatsApp foi desconectado do EscreveZap.*\n\nEnquanto estiver desconectado, seus áudios *não serão transcritos*.\n\nPara reconectar, me mande qualquer mensagem aqui e toque em *Conectar WhatsApp* no menu."
+      text_whatsapp: "⚠️ *Seu WhatsApp foi desconectado do EscreveZap.*\n\nEnquanto estiver desconectado, seus áudios *não serão transcritos*.\n\nPara reconectar, me mande qualquer mensagem aqui e toque em *⚡ Transcrever no chat* no menu."
       text_email: "Detectamos que o seu WhatsApp foi desconectado do EscreveZap. Enquanto estiver desconectado, seus áudios *não serão transcritos*.\n\nAcesse o painel e reconecte seu WhatsApp para voltar a usar."
       email_cta: "Reconectar agora"

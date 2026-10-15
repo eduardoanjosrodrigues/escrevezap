@@ -2,29 +2,50 @@ module Reply
   module Connectivity
     private
 
+    # Passo 1 (onboarding_connect / menu_connect): mostra onde inserir o código
+    # ANTES de gerá-lo. O código expira em ~2 min, então só pedimos ao WAHA
+    # quando a pessoa confirma que já está na tela certa (pairing_ready).
+    def show_connection_instructions
+      instructions = <<~MSG
+        ⚡ *Transcrever no chat* (recurso Pro, teste grátis até 20/mês)
+
+        Conecte seu WhatsApp e reaja a qualquer áudio com um emoji: a transcrição aparece como resposta na própria conversa.
+
+        *Antes de gerar o código, deixe o celular nesta tela:*
+        1. Abra o WhatsApp e vá em *Configurações* (ou nos três pontinhos ⋮).
+        2. Toque em *Aparelhos conectados* → *Conectar um aparelho*.
+        3. Toque em *Conectar com número de telefone* (abaixo da câmera do QR code).
+
+        ⏱️ O código vale só *cerca de 2 minutos*. Quando estiver nessa tela, toque em *✅ Estou pronto* que eu te mando o código.
+      MSG
+
+      Meta::Service.new(recipient: @phone).send_message_with_buttons(
+        instructions,
+        [
+          { type: "reply", reply: { id: "pairing_ready", title: "✅ Estou pronto" } },
+          { type: "reply", reply: { id: "cancel_connection", title: "❌ Cancelar" } }
+        ]
+      )
+
+      @current_conversation_state["stage"] = "waiting_for_connection"
+    end
+
+    # Passo 2 (pairing_ready): gera o código e manda só ele, com o último passo.
     def start_connection_flow
-      send_message(message: "🔌 *Iniciando processo de conexão...* Por favor, aguarde alguns segundos enquanto preparamos o seu código.")
+      send_message(message: "🔌 *Gerando seu código...* Aguarde alguns segundos.")
 
       # Use robust helper to generate pairing code
       pairing_code = @session.request_pairing_code(@phone)
 
-      instructions = <<~MSG
-        🔌 *Código de Pareamento Gerado!*
+      send_message(message: <<~MSG)
+        🔑 *Seu código de pareamento:*
 
-        Código: ```#{pairing_code}```
+        ```#{pairing_code}```
 
-        ⏱️ *O código expira em cerca de 2 minutos*, então já abra o WhatsApp e insira agora.
+        Digite esse código na tela *Conectar com número de telefone* do WhatsApp. ⏱️ Ele expira em *cerca de 2 minutos*.
 
-        *Onde inserir o código:*
-        1. Abra o WhatsApp e vá em *Configurações* (ou nos três pontinhos ⋮).
-        2. Toque em *Aparelhos conectados* → *Conectar um aparelho*.
-        3. Toque em *Conectar com número de telefone* (abaixo da câmera do QR code).
-        4. Digite o código ```#{pairing_code}```.
-
-        Se o código expirar, eu te aviso e você pode gerar outro. Assim que a conexão for concluída, eu te aviso por aqui! 🚀
+        Se expirar, eu te aviso e você pode gerar outro. Assim que a conexão for concluída, eu te aviso por aqui! 🚀
       MSG
-
-      send_message(message: instructions)
 
       @current_conversation_state["stage"] = "waiting_for_connection"
       # Lido pelo PairingCodeExpiredNoticeJob para avisar só quem pediu código
@@ -40,7 +61,7 @@ module Reply
             title: "Acompanhamento",
             rows: [
               { id: "verify_connection", title: "📡 Verificar Conexão", description: "Verificar se a conexão já está ativa" },
-              { id: "menu_connect", title: "🔄 Pedir Novo Código", description: "Gerar um novo código de pareamento" },
+              { id: "pairing_ready", title: "🔄 Pedir Novo Código", description: "Gerar um novo código de pareamento" },
               { id: "cancel_connection", title: "❌ Cancelar", description: "Voltar para o menu principal" }
             ]
           }
@@ -65,7 +86,7 @@ module Reply
               title: "Ações",
               rows: [
                 { id: "verify_connection", title: "📡 Verificar Novamente", description: "Consultar status atual da conexão" },
-                { id: "menu_connect", title: "🔄 Gerar Novo Código", description: "Reiniciar conexão e obter novo código" },
+                { id: "pairing_ready", title: "🔄 Gerar Novo Código", description: "Reiniciar conexão e obter novo código" },
                 { id: "cancel_connection", title: "❌ Voltar ao Menu", description: "Cancelar pareamento e voltar" }
               ]
             }

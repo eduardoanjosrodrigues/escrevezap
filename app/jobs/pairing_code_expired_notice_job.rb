@@ -40,7 +40,7 @@ class PairingCodeExpiredNoticeJob < ApplicationJob
         {
           title: I18n.t("whatsapp_notices.pairing_code_expired.section"),
           rows: [
-            { id: "menu_connect", title: I18n.t("whatsapp_notices.pairing_code_expired.new_code"), description: I18n.t("whatsapp_notices.pairing_code_expired.new_code_description") },
+            { id: "pairing_ready", title: I18n.t("whatsapp_notices.pairing_code_expired.new_code"), description: I18n.t("whatsapp_notices.pairing_code_expired.new_code_description") },
             { id: "cancel_connection", title: I18n.t("whatsapp_notices.pairing_code_expired.cancel"), description: I18n.t("whatsapp_notices.pairing_code_expired.cancel_description") }
           ]
         }
