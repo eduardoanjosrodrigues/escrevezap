@@ -1,14 +1,19 @@
 module Meta
   class Service
-    @@token = Rails.application.credentials.dig(:meta, :token) || "EAA9UZCvyzPu0BQ7CpxpZAVOwA60P2kcEFi9B8mgTs5I9EPGZBJvVjRlhR22ddqbuAHYHWZBadyaQZCXVSZBFwMVE98uiauCIMVt7dP7x5DthPYIq72wZBgZCe0kmZBeP6gtzl84VB8gaU24rXUrKMvFffbaWlOJhCUZC1ULH7IAK42kISpXJmMdqtT5xeMjFrMyQZDZD"
-    @@app_id = Rails.application.credentials.dig(:meta, :app_id) || "1814652502538333"
+    GRAPH_URL       = "https://graph.facebook.com/v25.0/".freeze
+    PHONE_NUMBER_ID = "1010460445488841".freeze
+    WABA_ID         = "950814390965540".freeze
 
-    def initialize(recipient:, sender: "1010460445488841", meta_waba_id: "950814390965540")
-      # @recipient = '5521936181803'
+    # O token fica só nas credentials (meta.token); nunca no código.
+    def self.token
+      Rails.application.credentials.dig(:meta, :token).presence ||
+        raise(KeyError, "credentials meta.token não configurado")
+    end
+
+    def initialize(recipient:, sender: PHONE_NUMBER_ID, meta_waba_id: WABA_ID)
       @recipient = recipient
       @sender = sender
       @meta_waba_id = meta_waba_id
-      # @token = Rails.application.credentials.dig(:meta, :wabas, :"waba_#{@meta_waba_id}")
 
       load_api_request_instance
     end
@@ -354,22 +359,22 @@ module Meta
     end
 
     def self.download_media(media_id, meta_waba_id)
-      api_request = ApiRequest.new("https://graph.facebook.com/v25.0/", {
-        "Authorization" => "Bearer " + @@token
+      api_request = ApiRequest.new(GRAPH_URL, {
+        "Authorization" => "Bearer #{token}"
       })
 
       response = api_request.get("/#{media_id}")
 
       api_request = ApiRequest.new(response["url"], {
-        "Authorization" => "Bearer " + @@token,
+        "Authorization" => "Bearer #{token}",
         "Accept" => response["mime_type"]
       })
       api_request.get("", {}, { "Accept" => response["mime_type"] })
     end
 
     def get_all_available_templates
-      @api_request = ApiRequest.new("#{Rails.application.credentials.dig(:meta, :url)}#{@meta_waba_id}", {
-        "Authorization" => "Bearer " + @@token
+      @api_request = ApiRequest.new("#{GRAPH_URL}#{@meta_waba_id}", {
+        "Authorization" => "Bearer #{self.class.token}"
       })
       response = @api_request.get("/message_templates?language=pt_BR&status=approved")
       response["data"]
@@ -400,8 +405,8 @@ module Meta
     end
 
     def load_api_request_instance
-      @api_request = ApiRequest.new("https://graph.facebook.com/v25.0/#{@sender}", {
-        "Authorization" => "Bearer " + @@token
+      @api_request = ApiRequest.new("#{GRAPH_URL}#{@sender}", {
+        "Authorization" => "Bearer #{self.class.token}"
       })
     end
   end
