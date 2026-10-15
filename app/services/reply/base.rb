@@ -4,6 +4,7 @@ module Reply
     include Reply::Onboarding
     include Reply::Connectivity
     include Reply::Billing
+    include Reply::FreeText
 
     def initialize(from:, display_name: nil)
       @display_name = display_name
@@ -17,8 +18,10 @@ module Reply
       @current_conversation_state = @user.conversation_state || {}
       @last_reply = @current_conversation_state.dig("last_reply_at")&.to_datetime
 
+      # Conversa parada há mais de 2h recomeça do estágio inicial, mas sem
+      # esquecer que o usuário já recebeu as boas-vindas ou está silenciado.
       if @last_reply && @last_reply < 2.hours.ago
-        @current_conversation_state = { "stage" => "initial" }
+        @current_conversation_state = @current_conversation_state.slice("welcomed_at", "silenced_until").merge("stage" => "initial")
       end
     end
 

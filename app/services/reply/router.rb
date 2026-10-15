@@ -106,7 +106,7 @@ module Reply
       when "waiting_for_billing_name"
         process_billing_name(message)
       else
-        show_menu
+        handle_free_text(message)
       end
     end
   end
