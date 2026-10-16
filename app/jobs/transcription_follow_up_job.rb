@@ -24,13 +24,17 @@ class TranscriptionFollowUpJob < ApplicationJob
     @session = @user.waha_session
     @meta    = Meta::Service.new(recipient: transcription.monitored_contact.phone_number)
 
-    kind = pick_follow_up
-    return if kind.nil?
+    # O lock serializa com o aviso de limite do TranscribeAudioJob, que olha os
+    # mesmos eventos para não mandar os dois.
+    @user.with_lock do
+      kind = pick_follow_up
+      next if kind.nil?
 
-    send(kind)
-    UsageEvent.track(user: @user, event_type: UsageEvent::FOLLOW_UP_SENT,
-                     metadata: { kind: kind.to_s, period: period, transcription_id: transcription.id })
-    Rails.logger.info(event: "transcription_follow_up", user_id: @user.id, kind: kind, transcription_id: transcription.id)
+      send(kind)
+      UsageEvent.track(user: @user, event_type: UsageEvent::FOLLOW_UP_SENT,
+                       metadata: { kind: kind.to_s, period: period, transcription_id: transcription.id })
+      Rails.logger.info(event: "transcription_follow_up", user_id: @user.id, kind: kind, transcription_id: transcription.id)
+    end
   end
 
   private
@@ -40,7 +44,7 @@ class TranscriptionFollowUpJob < ApplicationJob
     completed = @session.transcriptions.completed.count
 
     if remaining.zero?
-      :quota_last unless sent?(:quota_last)
+      :quota_last unless sent?(:quota_last) || @user.limit_notice_recently_sent?
     elsif remaining <= low_threshold && !sent?(:quota_low)
       :quota_low
     elsif completed == 1

@@ -34,6 +34,29 @@
     <% end %>
   </div>
 
+  <%# ── Funil de pagamento ── %>
+  <div>
+    <p class="text-sm text-(--color-text-muted) mb-2">Funil de pagamento: usuários distintos no período (eventos a partir de 16/10/2026).</p>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <% limit_users = @payment_funnel[UsageEvent::LIMIT_REACHED] %>
+      <% [[UsageEvent::LIMIT_REACHED, "Bateram no limite", "tiveram áudio recusado por limite"],
+          [UsageEvent::CHECKOUT_STARTED, "Tocaram em assinar", "escolheram Basic ou Pro no bot"],
+          [UsageEvent::PIX_GENERATED, "Receberam o Pix", "informaram CPF e nome"],
+          [UsageEvent::SUBSCRIPTION_ACTIVATED, "Pagaram", "primeiro pagamento confirmado"]].each do |step, label, hint| %>
+        <div class="bg-(--color-surface) border border-(--color-border) rounded-xl px-5 py-4">
+          <p class="text-xs font-medium text-(--color-text-muted) uppercase tracking-wide"><%= label %></p>
+          <p class="mt-1 text-2xl font-bold text-(--color-text) tabular-nums">
+            <%= @payment_funnel[step] %>
+            <% if step != UsageEvent::LIMIT_REACHED && limit_users.positive? %>
+              <span class="text-sm font-medium text-(--color-text-muted)"><%= number_to_percentage(@payment_funnel[step] * 100.0 / limit_users, precision: 0) %></span>
+            <% end %>
+          </p>
+          <p class="text-xs text-(--color-text-muted) mt-0.5"><%= hint %></p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
   <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
     <%= render "funnel_table", title: "Por página", rows: @by_page,
           hint: "home, precos, seo-*, blog, ferramenta… e direto (sem código: contato compartilhado ou áudio direto)" %>

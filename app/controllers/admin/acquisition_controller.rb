@@ -31,9 +31,22 @@ module Admin
       @by_channel = rows.group_by { |r| r[:channel] }.transform_values { |rs| funnel(rs) }.sort_by { |_, f| -f[:contacts] }
       @recent    = rows.sort_by { |r| r[:created_at] }.last(25).reverse
       @untracked = User.where(acquisition_ref: nil).count
+      @payment_funnel = payment_funnel
     end
 
     private
+
+    PAYMENT_STEPS = [ UsageEvent::LIMIT_REACHED, UsageEvent::CHECKOUT_STARTED,
+                      UsageEvent::PIX_GENERATED, UsageEvent::SUBSCRIPTION_ACTIVATED ].freeze
+
+    # Usuários distintos em cada passo do funil de pagamento no período
+    # (todos os usuários, não só os com código de aquisição).
+    def payment_funnel
+      events = UsageEvent.where(event_type: PAYMENT_STEPS)
+      events = events.where(occurred_at: PERIODS[@period].ago..) unless @period == "all"
+      counts = events.group(:event_type).distinct.count(:user_id)
+      PAYMENT_STEPS.index_with { |step| counts[step] || 0 }
+    end
 
     def funnel(rows)
       { contacts:    rows.size,

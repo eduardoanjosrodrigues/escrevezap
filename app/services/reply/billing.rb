@@ -69,6 +69,9 @@ module Reply
         return
       end
 
+      UsageEvent.track(user: @user, event_type: UsageEvent::CHECKOUT_STARTED,
+                       metadata: { plan: plan, from_plan: @user.plan, out_of_credits: @user.transcription_credits_remaining.zero? })
+
       @current_conversation_state["stage"] = "waiting_for_billing_cpf"
       @current_conversation_state["pending_upgrade_plan"] = plan
       @user.update!(conversation_state: @current_conversation_state)
@@ -129,6 +132,9 @@ module Reply
           current_period_end: nil
         )
 
+        UsageEvent.track(user: @user, event_type: UsageEvent::PIX_GENERATED,
+                         metadata: { plan: plan, subscription_id: subscription.id })
+
         # Resetar o estágio da conversação
         @current_conversation_state.delete("stage")
         @current_conversation_state.delete("pending_upgrade_plan")
@@ -163,6 +169,8 @@ module Reply
         )
       rescue => e
         Sentry.capture_exception(e)
+        UsageEvent.track(user: @user, event_type: UsageEvent::PIX_FAILED,
+                         metadata: { plan: plan, error: "#{e.class}: #{e.message}".truncate(200) })
         raise e unless Rails.env.production?
 
         Rails.logger.error "[Reply::Billing#process_billing_name] Error generating automatic pix: #{e.class} #{e.message}"

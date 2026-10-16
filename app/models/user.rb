@@ -128,6 +128,19 @@ class User < ApplicationRecord
     [ transcription_limit - transcriptions_used(excluding: excluding), 0 ].max
   end
 
+  # Quem encaminha vários áudios depois de bater no limite recebe um aviso só,
+  # não um por áudio. Vale tanto o aviso do TranscribeAudioJob quanto o
+  # "último áudio grátis" do TranscriptionFollowUpJob.
+  LIMIT_NOTICE_COOLDOWN = 12.hours
+
+  def limit_notice_recently_sent?
+    UsageEvent.where(user: self, occurred_at: LIMIT_NOTICE_COOLDOWN.ago..)
+              .where("(event_type = :limit AND metadata->>'notified' = 'true') OR " \
+                     "(event_type = :follow_up AND metadata->>'kind' = 'quota_last')",
+                     limit: UsageEvent::LIMIT_REACHED, follow_up: UsageEvent::FOLLOW_UP_SENT)
+              .exists?
+  end
+
   def reaction_limit_reached?(excluding: nil)
     return false if plan == "pro" || waha_session.nil?
 

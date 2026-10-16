@@ -70,6 +70,8 @@ module Inter
       )
 
       user.update!(plan: plan)
+      UsageEvent.track(user: user, event_type: UsageEvent::SUBSCRIPTION_ACTIVATED,
+                       metadata: { plan: plan, subscription_id: subscription.id })
       log_info "Assinatura do usuário #{user.id} ativada/renovada com sucesso! Plano: #{plan}"
 
       plan_name = plan.to_s.humanize

@@ -188,7 +188,7 @@ class TranscribeAudioJob < ApplicationJob
     # Guard: limite do plano (Grátis: na vida; pagos: no mês)
     if user.transcription_limit_reached?(excluding: transcription, credits: transcription.credits)
       Rails.logger.info "[TranscribeAudioJob] Limite do plano atingido para user #{user.id} — skipping"
-      send_limit_reached_notice(transcription, channel, user)
+      send_limit_reached_notice(transcription, channel, user) if claim_limit_notice(transcription, user)
       fail_transcription!(transcription, "Limite de transcrições do plano atingido")
       return
     end
@@ -508,6 +508,29 @@ class TranscribeAudioJob < ApplicationJob
 
   def fail_transcription!(transcription, message)
     transcription.update!(status: :failed, error_message: message)
+  end
+
+  # Registra o LIMIT_REACHED e decide se este áudio recusado leva o aviso.
+  # Não leva quando:
+  #   - outro aviso saiu há pouco (vários áudios encaminhados juntos, ou um
+  #     encaminhado + um por reação);
+  #   - um áudio anterior do chat direto ainda está transcrevendo: foi ele que
+  #     gastou o último crédito, e o follow-up dele ("esse foi seu último áudio
+  #     grátis") chega depois da transcrição, na ordem certa.
+  # O lock no usuário serializa jobs simultâneos do mesmo usuário.
+  def claim_limit_notice(transcription, user)
+    user.with_lock do
+      in_flight = user.waha_session.transcriptions.direct.processing
+                      .where("transcriptions.id < ?", transcription.id)
+                      .where("transcriptions.created_at > ?", 1.hour.ago)
+                      .exists?
+      notify = !in_flight && !user.limit_notice_recently_sent?
+
+      UsageEvent.track(user: user, event_type: UsageEvent::LIMIT_REACHED,
+                       metadata: { transcription_id: transcription.id, channel: transcription.channel,
+                                   plan: user.plan, notified: notify })
+      notify
+    end
   end
 
   def send_limit_reached_notice(transcription, channel, user)
