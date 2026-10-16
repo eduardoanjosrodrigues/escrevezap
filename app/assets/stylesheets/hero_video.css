@@ -1,0 +1,500 @@
+/* ── Hero "video" (sales script as an HTML animation) ────────────────────
+   Scenes are stacked layers; hero_video_controller.js activates one at a
+   time and reveals its beats ([data-beat] → .is-shown). Visuals reuse the
+   WhatsApp demo styles (whatsapp_demo.css). */
+
+.hv {
+  --hv-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --hv-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.hv-stage {
+  position: relative;
+  height: 720px;
+  border-radius: 28px;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 80% at 85% 10%, #DDF5E9 0%, rgba(221, 245, 233, 0) 60%),
+    radial-gradient(90% 70% at 0% 100%, #F2FBF6 0%, rgba(242, 251, 246, 0) 70%),
+    #FFFFFF;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 30px 80px -40px rgba(16, 40, 30, 0.35);
+}
+@media (min-width: 1024px) {
+  .hv-stage { height: 600px; }
+}
+
+/* ── Top bar: progress segments + pause ─────────────────────────────── */
+.hv-topbar {
+  position: absolute;
+  z-index: 20;
+  inset: 0 0 auto 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 16px 0 20px;
+}
+.hv-progress { flex: 1; display: flex; gap: 6px; }
+.hv-seg {
+  flex: 1;
+  height: 16px;
+  padding: 6px 0;
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+.hv-seg span {
+  position: relative;
+  display: block;
+  height: 4px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(17, 24, 39, 0.1);
+}
+.hv-seg span::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 0;
+  border-radius: inherit;
+  background: var(--color-brand);
+}
+.hv-seg.is-done span::after { width: 100%; }
+.hv-seg.is-active span::after { animation: hv-fill var(--dur, 5s) linear forwards; }
+.hv-stage.is-paused .hv-seg.is-active span::after { animation-play-state: paused; }
+@keyframes hv-fill { to { width: 100%; } }
+.hv-seg:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; border-radius: 4px; }
+
+.hv-toggle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--color-text-muted);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--color-border);
+  transition: background 0.2s, color 0.2s;
+}
+.hv-toggle:hover { color: var(--color-text); background: #fff; }
+.hv-toggle:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
+
+.hv-stage.is-dark .hv-seg span { background: rgba(255, 255, 255, 0.25); }
+.hv-stage.is-dark .hv-seg span::after { background: #fff; }
+.hv-stage.is-dark .hv-toggle { color: #fff; background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.25); }
+
+/* ── Scenes ──────────────────────────────────────────────────────────── */
+.hv-scene {
+  position: absolute;
+  inset: 44px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 8px 20px 20px;
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.98);
+  transition: opacity 0.5s ease, transform 0.7s var(--hv-ease), visibility 0s linear 0.5s;
+}
+.hv-scene.is-active {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition: opacity 0.5s ease, transform 0.7s var(--hv-ease), visibility 0s;
+}
+@media (min-width: 1024px) {
+  .hv-scene {
+    flex-direction: row;
+    gap: 48px;
+    padding: 8px 64px 24px;
+  }
+  .hv-scene > .hv-copy { flex: 1; max-width: 440px; }
+}
+.hv-scene--center { text-align: center; }
+@media (min-width: 1024px) {
+  .hv-scene--center { flex-direction: column; gap: 28px; }
+}
+
+.hv-copy { text-align: center; }
+@media (min-width: 1024px) {
+  .hv-copy { text-align: left; }
+}
+
+/* Copy that just appears with the scene */
+.hv-scene .hv-copy > :not(.hv-beat):not(.hv-swap),
+.hv-scene--center > :not(.hv-beat):not(ul) {
+  opacity: 0;
+  transform: translateY(14px);
+}
+.hv-scene.is-active .hv-copy > :not(.hv-beat):not(.hv-swap),
+.hv-scene--center.is-active > :not(.hv-beat):not(ul) {
+  animation: hv-rise 0.7s var(--hv-ease) both;
+}
+.hv-scene.is-active .hv-copy > :nth-child(2) { animation-delay: 0.1s; }
+.hv-scene.is-active .hv-copy > :nth-child(3) { animation-delay: 0.2s; }
+@keyframes hv-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Beats revealed by the controller */
+.hv-beat {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.5s ease, transform 0.7s var(--hv-ease);
+}
+.hv-beat.is-shown { opacity: 1; transform: none; }
+
+/* Captions that replace each other in place */
+.hv-swap { display: grid; }
+.hv-swap > * {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.35s ease, transform 0.6s var(--hv-ease);
+}
+.hv-swap > .is-shown { opacity: 1; transform: none; transition-delay: 0.15s; }
+
+.hv-title {
+  font-size: 28px;
+  line-height: 1.12;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+.hv-title--xl { font-size: 34px; }
+.hv-title-sub { display: block; margin-top: 8px; color: var(--color-brand); }
+@media (min-width: 1024px) {
+  .hv-title { font-size: 44px; }
+  .hv-title--xl { font-size: 56px; }
+}
+.hv-body {
+  margin-top: 12px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+@media (min-width: 1024px) {
+  .hv-body { font-size: 19px; }
+}
+.hv-eyebrow {
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-brand);
+}
+.hv-pill {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--color-brand-light);
+  color: var(--color-brand);
+  font-size: 13px;
+  font-weight: 700;
+}
+.hv-pill--pro { background: var(--color-brand); color: #fff; }
+.hv-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 10px 30px -12px rgba(16, 40, 30, 0.3);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.hv-counter i { color: var(--color-brand); font-size: 18px; }
+
+/* Visuals are drawn at phone scale and zoomed to fit the stage */
+/* Mobile: copy (up to ~200px) + phone must fit in the 720px stage */
+.hv-visual { position: relative; flex: none; zoom: 0.56; }
+@media (min-width: 1024px) {
+  .hv-visual { zoom: 0.8; }
+}
+.hv .wa-demo { zoom: 1; }
+/* Demos run sped up here (speed > 1): touch motion 1.5x faster to match
+   wait.raw() in whatsapp_demo_controller.js */
+.hv .wa-finger { transition-duration: 0.4s, 0.2s, 0.15s, 0.15s, 0.15s; }
+.hv .wa-finger.is-holding::after { animation-duration: 0.47s; }
+.hv .wa-row--target.is-pressing > .wa-bubble { transition-duration: 0.4s; }
+
+/* The scene copy already says what the demo's captions and badge say */
+.hv .wa-demo > figcaption,
+.hv .wa-badge { display: none; }
+
+/* ── 1. Lock screen with notifications ───────────────────────────────── */
+.wa-screen.hv-lock {
+  background:
+    radial-gradient(80% 60% at 20% 15%, #7DD3A8 0%, rgba(125, 211, 168, 0) 70%),
+    radial-gradient(70% 60% at 90% 80%, #2F6F8F 0%, rgba(47, 111, 143, 0) 70%),
+    linear-gradient(160deg, #1E7A52, #12324A);
+  color: #fff;
+}
+.hv-lock-status { color: #fff; }
+.hv-lock-date { margin-top: 64px; text-align: center; font-size: 17px; font-weight: 600; opacity: 0.9; }
+.hv-lock-time {
+  text-align: center;
+  font-size: 86px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.hv-lock-indicator { background: #fff; }
+.hv-notifs { display: flex; flex-direction: column; padding: 28px 10px 0; }
+.hv-notif {
+  display: flex;
+  gap: 10px;
+  max-height: 0;
+  margin-bottom: 0;
+  padding: 0 12px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: #111B21;
+  font-size: 13px;
+  line-height: 1.3;
+  opacity: 0;
+  transform: translateY(-16px) scale(0.96);
+  transition:
+    max-height 0.45s var(--hv-ease),
+    padding 0.45s var(--hv-ease),
+    margin 0.45s var(--hv-ease),
+    opacity 0.3s ease,
+    transform 0.5s var(--hv-spring);
+}
+.hv-notif.is-shown {
+  max-height: 80px;
+  margin-bottom: 8px;
+  padding: 11px 12px;
+  opacity: 1;
+  transform: none;
+}
+.hv-notif-icon {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: #25D366;
+  color: #fff;
+  font-size: 22px;
+}
+.hv-notif-body { flex: 1; min-width: 0; }
+.hv-notif-head { display: flex; justify-content: space-between; gap: 8px; }
+.hv-notif-head strong { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hv-notif-head span { flex: none; font-size: 11.5px; color: rgba(17, 27, 33, 0.55); }
+
+/* ── 2. Pain: situation cards + 2x voice note ────────────────────────── */
+.hv-cards {
+  position: relative;
+  width: 300px;
+  height: 340px;
+  transition: opacity 0.4s ease, transform 0.5s var(--hv-ease);
+}
+.hv-cards.is-gone { opacity: 0; transform: scale(0.9); }
+.hv-card {
+  position: absolute;
+  inset: 40px 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: 0 24px 50px -20px rgba(16, 40, 30, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text);
+  opacity: 0;
+  transform: translateY(60px) rotate(0deg) scale(0.9);
+  transition: opacity 0.35s ease, transform 0.6s var(--hv-spring);
+}
+.hv-card-emoji { font-size: 72px; line-height: 1; }
+.hv-card.is-shown { opacity: 1; }
+.hv-card--1.is-shown { transform: rotate(-6deg) translateX(-18px); }
+.hv-card--2.is-shown { transform: rotate(4deg) translateX(14px); }
+.hv-card--3.is-shown { transform: rotate(-1deg); }
+
+.hv-voice {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 240px;
+  margin: -40px 0 0 -120px;
+  opacity: 0;
+  transform: translateY(20px) scale(0.9);
+  transition: opacity 0.4s ease, transform 0.6s var(--hv-spring);
+}
+.hv-voice.is-shown { opacity: 1; transform: scale(1.6); }
+.hv-voice .wa-bubble { max-width: none; }
+.hv-voice .wa-wave::before { left: -2px; }
+.hv-voice.is-playing .wa-wave::before { animation: hv-scrub 1.7s linear forwards; }
+.hv-voice.is-rewind .wa-wave::before { animation: hv-rewind 0.5s var(--hv-ease) forwards; }
+@keyframes hv-scrub { from { left: -2px; } to { left: 88%; } }
+@keyframes hv-rewind { from { left: 88%; } to { left: 30%; } }
+.hv-speed,
+.hv-back {
+  position: absolute;
+  top: -34px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.hv-speed { right: 0; background: #111B21; color: #fff; }
+.hv-back {
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #FEE2E2;
+  color: #B91C1C;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.2s, transform 0.35s var(--hv-spring);
+}
+.hv-voice.is-rewind .hv-back { opacity: 1; transform: none; }
+
+/* ── 3. Turn ─────────────────────────────────────────────────────────── */
+.hv-scene--turn {
+  inset: 0;
+  padding-top: 52px;
+  flex-direction: column;
+  background:
+    radial-gradient(70% 60% at 80% 20%, rgba(125, 211, 168, 0.35) 0%, rgba(125, 211, 168, 0) 70%),
+    linear-gradient(160deg, #1E7A52, #0F3D2A);
+  color: #fff;
+  text-align: center;
+}
+@media (min-width: 1024px) {
+  .hv-scene--turn { flex-direction: column; gap: 36px; }
+}
+.hv-turn-text {
+  max-width: 820px;
+  font-size: 32px;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+@media (min-width: 1024px) {
+  .hv-turn-text { font-size: 58px; }
+}
+.hv-strike { position: relative; display: inline-block; transition: opacity 0.4s; }
+.hv-strike::after {
+  content: "";
+  position: absolute;
+  left: -4px;
+  right: -4px;
+  top: 55%;
+  height: 0.09em;
+  border-radius: 4px;
+  background: #FCA5A5;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.45s var(--hv-ease);
+}
+.hv-strike.is-shown { opacity: 0.55; }
+.hv-strike.is-shown::after { transform: scaleX(1); }
+.hv-word {
+  display: inline-block;
+  max-width: 0;
+  overflow: hidden;
+  vertical-align: bottom;
+  white-space: nowrap;
+  color: #86EFAC;
+  opacity: 0;
+  transition: max-width 0.6s var(--hv-ease), opacity 0.4s;
+}
+.hv-word.is-shown { max-width: 3em; opacity: 1; }
+.hv-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px 10px 10px;
+  border-radius: 18px;
+  background: #fff;
+  color: var(--color-text);
+  font-size: 22px;
+  font-weight: 800;
+}
+.hv-logo img { width: 44px; height: 44px; }
+
+/* ── 6. Proof ────────────────────────────────────────────────────────── */
+.hv-proof {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 360px;
+}
+@media (min-width: 1024px) {
+  .hv-proof { flex-direction: row; max-width: none; justify-content: center; gap: 20px; }
+}
+.hv-proof li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 16px 40px -20px rgba(16, 40, 30, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+  text-align: left;
+}
+@media (min-width: 1024px) {
+  .hv-proof li { flex-direction: column; width: 220px; padding: 28px 20px; text-align: center; font-size: 18px; }
+}
+.hv-proof-icon {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: var(--color-brand-light);
+  color: var(--color-brand);
+  font-size: 22px;
+}
+@media (min-width: 1024px) {
+  .hv-proof-icon { width: 56px; height: 56px; font-size: 28px; }
+}
+
+/* ── 7. CTA ──────────────────────────────────────────────────────────── */
+.hv-cta { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.hv-cta-button { font-size: 16px; animation: hv-pulse 2s ease-in-out infinite; }
+@keyframes hv-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(30, 122, 82, 0.45); }
+  50%      { box-shadow: 0 0 0 12px rgba(30, 122, 82, 0); }
+}
+.hv-replay {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+.hv-replay:hover { color: var(--color-text); }
+
+@media (prefers-reduced-motion: reduce) {
+  .hv *,
+  .hv *::before,
+  .hv *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,13 @@
+<%# iOS navigation bar of a chat. locals: avatar (html), name, alt_status (:recording or :typing), target %>
+<header class="wa-header" data-status="online" data-whatsapp-demo-target="<%= target %>">
+  <span class="wa-back"><i class="ph ph-caret-left"></i><span class="wa-back-count">12</span></span>
+  <%= avatar %>
+  <div class="wa-title">
+    <div class="wa-title-name"><%= name %></div>
+    <div class="wa-title-sub">
+      <span class="wa-sub-online"><%= t("pages.whatsapp_demo.online") %></span>
+      <span class="wa-sub-<%= alt_status %>"><%= t("pages.whatsapp_demo.#{alt_status}") %></span>
+    </div>
+  </div>
+  <div class="wa-header-actions"><i class="ph ph-video-camera"></i><i class="ph ph-phone"></i></div>
+</header>

@@ -1,0 +1,54 @@
+<%# Shared iPhone frame for the animated WhatsApp demos (rendered as a partial
+    layout). The scenario's chats go in the block; the script for each
+    scenario lives in whatsapp_demo_controller.js, styles in whatsapp_demo.css.
+    locals: scenario, scope (I18n scope with aria_label/badge/steps), steps,
+    autoplay (false when the hero video drives it), speed %>
+<figure class="wa-demo flex flex-col items-center gap-5"
+        data-controller="whatsapp-demo"
+        data-whatsapp-demo-scenario-value="<%= scenario %>"
+        data-whatsapp-demo-autoplay-value="<%= autoplay %>"
+        data-whatsapp-demo-speed-value="<%= speed %>"
+        data-whatsapp-demo-pause-label-value="<%= t("pages.whatsapp_demo.pause") %>"
+        data-whatsapp-demo-play-label-value="<%= t("pages.whatsapp_demo.play") %>">
+
+  <div class="relative">
+    <div class="wa-phone" role="img" aria-label="<%= t("#{scope}.aria_label") %>">
+      <div class="wa-screen" data-whatsapp-demo-target="screen" aria-hidden="true">
+        <div class="wa-island"></div>
+        <div class="wa-statusbar">
+          <span><%= t("pages.whatsapp_demo.clock") %></span>
+          <span class="wa-statusbar-icons">
+            <i class="ph-fill ph-cell-signal-full"></i>
+            <i class="ph-bold ph-wifi-high"></i>
+            <i class="ph-fill ph-battery-full"></i>
+          </span>
+        </div>
+
+        <%= yield %>
+
+        <div class="wa-finger" data-whatsapp-demo-target="finger"></div>
+        <div class="wa-home-indicator"></div>
+      </div>
+    </div>
+
+    <div class="wa-badge" data-whatsapp-demo-target="badge" aria-hidden="true">
+      <span class="wa-badge-icon"><i class="ph-fill ph-lightning"></i></span>
+      <span><strong><%= t("#{scope}.badge_title") %></strong><%= t("#{scope}.badge_body") %></span>
+    </div>
+  </div>
+
+  <figcaption class="flex items-center gap-2">
+    <ol class="wa-steps">
+      <% steps.each_with_index do |key, i| %>
+        <li class="wa-step" data-whatsapp-demo-target="step"><b><%= i + 1 %></b><span><%= t("#{scope}.steps.#{key}") %></span></li>
+      <% end %>
+    </ol>
+    <button type="button"
+            class="w-8 h-8 rounded-full flex items-center justify-center text-(--color-text-muted) hover:bg-(--color-accent-light) focus:outline-none focus:ring-2 focus:ring-(--color-brand) transition-colors"
+            data-whatsapp-demo-target="toggle"
+            data-action="whatsapp-demo#toggle"
+            aria-label="<%= t("pages.whatsapp_demo.pause") %>">
+      <i class="ph-fill ph-pause"></i>
+    </button>
+  </figcaption>
+</figure>

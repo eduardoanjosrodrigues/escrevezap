@@ -1,0 +1,110 @@
+<%# Animated demo (free flow): an audio arrives, gets forwarded to the
+    EscreveZap bot and the transcription comes back. %>
+<% marta_avatar = tag.div(t("pages.whatsapp_demo.contact_initials"), class: "wa-avatar wa-avatar--marta") %>
+<% bot_avatar   = tag.div(image_tag("/logo.png", alt: ""), class: "wa-avatar wa-avatar--bot") %>
+
+<%= render layout: "pages/whatsapp_demo_frame",
+           locals: { autoplay: local_assigns.fetch(:autoplay, true), speed: local_assigns.fetch(:speed, 1), scenario: "forward", scope: "pages.whatsapp_demo", steps: %w[hold forward read] } do %>
+
+  <%# ── Chat 1: the contact who sends the long audio ── %>
+  <section class="wa-view wa-view--contact">
+    <%= render "pages/whatsapp_demo_header", avatar: marta_avatar, name: t("pages.whatsapp_demo.contact_name"), alt_status: :recording, target: "contactHeader" %>
+
+    <div class="wa-body">
+      <span class="wa-chip"><%= t("pages.whatsapp_demo.today") %></span>
+      <div class="wa-row wa-row--in">
+        <span class="wa-check"><i class="ph-bold ph-check"></i></span>
+        <div class="wa-bubble has-tail"><%= t("pages.whatsapp_demo.greeting_in") %><span class="wa-meta">09:12</span></div>
+      </div>
+      <div class="wa-row wa-row--out wa-row--gap">
+        <span class="wa-check"><i class="ph-bold ph-check"></i></span>
+        <div class="wa-bubble has-tail">
+          <%= t("pages.whatsapp_demo.greeting_out") %>
+          <span class="wa-meta">09:30 <span class="wa-ticks wa-ticks--read"><i class="ph ph-check wa-tick-single"></i><i class="ph ph-checks wa-tick-double"></i></span></span>
+        </div>
+      </div>
+      <div class="wa-row wa-row--in wa-row--gap wa-row--target is-pending" data-demo-row data-whatsapp-demo-target="incomingAudio">
+        <span class="wa-check" data-whatsapp-demo-target="audioCheck"><i class="ph-bold ph-check"></i></span>
+        <%= render "pages/whatsapp_demo_reactions" %>
+        <div class="wa-bubble" data-whatsapp-demo-target="audioBubble">
+          <%= render "pages/whatsapp_demo_voice", avatar: marta_avatar, duration: t("pages.whatsapp_demo.audio_duration"), time: "09:41" %>
+        </div>
+        <%= render "pages/whatsapp_demo_menu" %>
+      </div>
+      <div class="wa-row wa-row--in is-pending" data-demo-row data-whatsapp-demo-target="incomingText">
+        <span class="wa-check"><i class="ph-bold ph-check"></i></span>
+        <div class="wa-bubble has-tail"><%= t("pages.whatsapp_demo.follow_up") %><span class="wa-meta">09:41</span></div>
+      </div>
+    </div>
+
+    <div class="wa-overlay" data-whatsapp-demo-target="overlay"></div>
+
+    <%= render "pages/whatsapp_demo_composer" %>
+    <footer class="wa-selectbar">
+      <i class="ph ph-trash is-muted"></i>
+      <span class="wa-selectbar-label"><%= t("pages.whatsapp_demo.selected") %></span>
+      <i class="ph ph-arrow-bend-up-right" data-whatsapp-demo-target="forwardButton"></i>
+    </footer>
+  </section>
+
+  <%# ── Chat 2: the EscreveZap bot ── %>
+  <section class="wa-view wa-view--bot">
+    <%= render "pages/whatsapp_demo_header", avatar: bot_avatar, name: t("pages.whatsapp_demo.bot_name"), alt_status: :typing, target: "botHeader" %>
+
+    <div class="wa-body">
+      <span class="wa-chip"><%= t("pages.whatsapp_demo.today") %></span>
+      <div class="wa-row wa-row--out is-pending" data-demo-row data-whatsapp-demo-target="sentAudio">
+        <div class="wa-bubble has-tail">
+          <div class="wa-forwarded"><i class="ph ph-arrow-bend-up-right"></i><%= t("pages.whatsapp_demo.forwarded") %></div>
+          <%= render "pages/whatsapp_demo_voice", avatar: marta_avatar, duration: t("pages.whatsapp_demo.audio_duration"), time: "09:42", ticks: true %>
+        </div>
+      </div>
+      <div class="wa-row wa-row--in wa-row--gap is-pending" data-demo-row data-whatsapp-demo-target="typing">
+        <div class="wa-bubble has-tail"><div class="wa-typing"><span></span><span></span><span></span></div></div>
+      </div>
+      <div class="wa-row wa-row--in wa-row--gap is-pending" data-demo-row data-whatsapp-demo-target="reply">
+        <div class="wa-bubble has-tail">
+          <div class="wa-reply-heading">📄 <strong><%= t("pages.whatsapp_demo.transcript_heading") %></strong></div>
+          <div data-whatsapp-demo-target="reveal" data-text="<%= t("pages.whatsapp_demo.transcript") %>"><%= t("pages.whatsapp_demo.transcript") %></div>
+          <div class="wa-reply-footer is-pending" data-demo-later data-whatsapp-demo-target="replyFooter">
+            ---<br><em><%= t("pages.whatsapp_demo.branding") %></em><span class="wa-meta">09:42</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%= render "pages/whatsapp_demo_composer" %>
+  </section>
+
+  <%# ── Forward sheet ── %>
+  <div class="wa-sheet-backdrop"></div>
+  <div class="wa-sheet">
+    <div class="wa-sheet-grabber"></div>
+    <div class="wa-sheet-header">
+      <span><%= t("pages.whatsapp_demo.cancel") %></span>
+      <strong><%= t("pages.whatsapp_demo.forward_title") %></strong>
+      <span></span>
+    </div>
+    <div class="wa-search"><i class="ph ph-magnifying-glass"></i><%= t("pages.whatsapp_demo.search") %></div>
+    <div class="wa-sheet-section"><%= t("pages.whatsapp_demo.recent") %></div>
+    <div class="wa-contacts">
+      <div class="wa-contact" data-whatsapp-demo-target="botContact">
+        <%= bot_avatar %>
+        <div class="wa-contact-name">
+          <span><%= t("pages.whatsapp_demo.bot_name") %><small><%= t("pages.whatsapp_demo.bot_hint") %></small></span>
+          <span class="wa-check" data-whatsapp-demo-target="botCheck"><i class="ph-bold ph-check"></i></span>
+        </div>
+      </div>
+      <% [["mom", t("pages.whatsapp_demo.contacts.mom"), "M"], ["work", t("pages.whatsapp_demo.contacts.work"), "T"], ["friend", t("pages.whatsapp_demo.contacts.friend"), "L"]].each do |kind, name, initial| %>
+        <div class="wa-contact">
+          <div class="wa-avatar wa-avatar--<%= kind %>"><%= initial %></div>
+          <div class="wa-contact-name"><span><%= name %></span><span class="wa-check"></span></div>
+        </div>
+      <% end %>
+    </div>
+    <div class="wa-sendbar" data-whatsapp-demo-target="sendBar">
+      <strong><%= t("pages.whatsapp_demo.bot_name") %></strong>
+      <span class="wa-sendbar-button" data-whatsapp-demo-target="sendButton"><i class="ph-fill ph-paper-plane-right"></i></span>
+    </div>
+  </div>
+<% end %>

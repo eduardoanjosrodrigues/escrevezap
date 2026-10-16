@@ -1,0 +1,173 @@
+<%# Hero "video": the sales script (dor → solução → como funciona → teste grátis)
+    as an HTML animation. Scenes 4 and 5 drive the phone demos. Script in
+    hero_video_controller.js, styles in hero_video.css. %>
+<% scenes   = %w[hook pain turn forward pro proof cta] %>
+<% tm_avatar = tag.div("TM", class: "wa-avatar wa-avatar--marta") %>
+
+<section class="hv"
+         aria-label="<%= t("pages.hero_video.aria_label") %>"
+         data-controller="hero-video"
+         data-action="whatsapp-demo:step->hero-video#demoStep"
+         data-hero-video-pause-label-value="<%= t("pages.whatsapp_demo.pause") %>"
+         data-hero-video-play-label-value="<%= t("pages.whatsapp_demo.play") %>">
+  <div class="hv-stage" data-hero-video-target="stage">
+
+    <%# ── Progress (one segment per scene, click to jump) + pause ── %>
+    <div class="hv-topbar">
+      <div class="hv-progress">
+        <% scenes.each_with_index do |scene, i| %>
+          <button type="button" class="hv-seg" data-hero-video-target="segment"
+                  data-action="hero-video#jump" data-hero-video-index-param="<%= i %>"
+                  aria-label="<%= t("pages.hero_video.go_to", scene: t("pages.hero_video.scenes.#{scene}")) %>"><span></span></button>
+        <% end %>
+      </div>
+      <button type="button" class="hv-toggle" data-hero-video-target="toggle" data-action="hero-video#toggle"
+              aria-label="<%= t("pages.whatsapp_demo.pause") %>"><i class="ph-fill ph-pause"></i></button>
+    </div>
+
+    <%# ── 1. Hook: notifications piling up on the lock screen ── %>
+    <div class="hv-scene" data-hero-video-target="scene">
+      <div class="hv-copy">
+        <h2 class="hv-title hv-beat" data-beat="hook-title"><%= t("pages.hero_video.hook.title") %></h2>
+      </div>
+      <div class="hv-visual" aria-hidden="true">
+        <div class="wa-demo">
+          <div class="wa-phone">
+            <div class="wa-screen hv-lock">
+              <div class="wa-island"></div>
+              <div class="wa-statusbar hv-lock-status">
+                <span></span>
+                <span class="wa-statusbar-icons"><i class="ph-fill ph-cell-signal-full"></i><i class="ph-bold ph-wifi-high"></i><i class="ph-fill ph-battery-full"></i></span>
+              </div>
+              <div class="hv-lock-date"><%= t("pages.hero_video.hook.date") %></div>
+              <div class="hv-lock-time"><%= t("pages.whatsapp_demo.clock") %></div>
+              <div class="hv-notifs">
+                <% t("pages.hero_video.hook.notifications").each_with_index.reverse_each do |(name, duration), i| %>
+                  <div class="hv-notif" data-beat="notif-<%= i %>">
+                    <span class="hv-notif-icon"><i class="ph-fill ph-whatsapp-logo"></i></span>
+                    <div class="hv-notif-body">
+                      <div class="hv-notif-head"><strong><%= name %></strong><span><%= t("pages.hero_video.hook.now") %></span></div>
+                      <div><%= t("pages.hero_video.hook.voice_message", duration: duration) %></div>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+              <div class="wa-home-indicator hv-lock-indicator"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%# ── 2. Pain: everyday situations + the 2x replay ── %>
+    <div class="hv-scene" data-hero-video-target="scene">
+      <div class="hv-copy">
+        <p class="hv-eyebrow"><%= t("pages.hero_video.pain.eyebrow") %></p>
+        <div class="hv-swap">
+          <% %w[meeting bus baby].each_with_index do |key, i| %>
+            <h2 class="hv-title" data-beat-group="pain-caption" data-beat="pain-<%= i + 1 %>"><%= t("pages.hero_video.pain.#{key}") %></h2>
+          <% end %>
+          <h2 class="hv-title" data-beat-group="pain-caption" data-beat="pain-4">
+            <%= t("pages.hero_video.pain.rewind") %>
+            <span class="hv-title-sub"><%= t("pages.hero_video.pain.rewind_sub") %></span>
+          </h2>
+        </div>
+      </div>
+      <div class="hv-visual" aria-hidden="true">
+        <div class="hv-cards" data-beat="pain-cards">
+          <% [["💼", "meeting"], ["🚌", "bus"], ["👶", "baby"]].each_with_index do |(emoji, key), i| %>
+            <div class="hv-card hv-card--<%= i + 1 %>" data-beat="card-<%= i + 1 %>">
+              <span class="hv-card-emoji"><%= emoji %></span>
+              <span><%= t("pages.hero_video.pain.#{key}_card") %></span>
+            </div>
+          <% end %>
+        </div>
+        <div class="hv-voice wa-demo" data-beat="pain-voice" data-hero-video-target="voice">
+          <div class="wa-row wa-row--in">
+            <div class="wa-bubble has-tail">
+              <%= render "pages/whatsapp_demo_voice", avatar: tm_avatar, duration: "4:12", time: "09:41" %>
+            </div>
+          </div>
+          <span class="hv-speed">2x</span>
+          <span class="hv-back"><i class="ph-bold ph-arrow-counter-clockwise"></i><%= t("pages.hero_video.pain.back") %></span>
+        </div>
+      </div>
+    </div>
+
+    <%# ── 3. Turn: ouvir → ler ── %>
+    <div class="hv-scene hv-scene--turn" data-hero-video-target="scene" data-dark>
+      <p class="hv-turn-text">
+        <%= t("pages.hero_video.turn.before") %>
+        <span class="hv-strike" data-beat="turn-strike"><%= t("pages.hero_video.turn.strike") %></span>
+        <span class="hv-word" data-beat="turn-word"><%= t("pages.hero_video.turn.word") %></span>
+        <%= t("pages.hero_video.turn.after") %>
+      </p>
+      <div class="hv-logo hv-beat" data-beat="turn-logo">
+        <%= image_tag "/logo.png", alt: "", width: 44, height: 44 %>
+        <span>EscreveZap</span>
+      </div>
+    </div>
+
+    <%# ── 4. Solution (free): forward to the bot ── %>
+    <div class="hv-scene" data-hero-video-target="scene">
+      <div class="hv-copy">
+        <span class="hv-pill"><%= t("pages.hero_video.forward.eyebrow") %></span>
+        <h2 class="hv-title"><%= t("pages.hero_video.forward.title") %></h2>
+        <p class="hv-body"><%= t("pages.hero_video.forward.body") %></p>
+        <p class="hv-counter hv-beat" data-beat="forward-counter"><i class="ph-fill ph-timer"></i><%= t("pages.hero_video.forward.counter") %></p>
+      </div>
+      <div class="hv-visual" data-hero-video-target="forwardDemo">
+        <%= render "pages/whatsapp_demo", autoplay: false, speed: 2.4 %>
+      </div>
+    </div>
+
+    <%# ── 5. Pro: react with an emoji ── %>
+    <div class="hv-scene" data-hero-video-target="scene">
+      <div class="hv-copy">
+        <span class="hv-pill hv-pill--pro"><%= t("pages.hero_video.pro.eyebrow") %></span>
+        <div class="hv-swap">
+          <div data-beat-group="pro-caption" data-beat="pro-1">
+            <h2 class="hv-title"><%= t("pages.hero_video.pro.title") %></h2>
+            <p class="hv-body"><%= t("pages.hero_video.pro.body") %></p>
+          </div>
+          <div data-beat-group="pro-caption" data-beat="pro-2">
+            <h2 class="hv-title"><%= t("pages.hero_video.pro.summary_title") %></h2>
+            <p class="hv-body"><%= t("pages.hero_video.pro.summary_body") %></p>
+          </div>
+        </div>
+      </div>
+      <div class="hv-visual" data-hero-video-target="proDemo">
+        <%= render "pages/whatsapp_reaction_demo", autoplay: false, speed: 2 %>
+      </div>
+    </div>
+
+    <%# ── 6. Proof ── %>
+    <div class="hv-scene hv-scene--center" data-hero-video-target="scene">
+      <h2 class="hv-title"><%= t("pages.hero_video.proof.title") %></h2>
+      <ul class="hv-proof">
+        <% [["ph-rocket-launch", "no_install"], ["ph-whatsapp-logo", "own_whatsapp"], ["ph-sparkle", "ai_summary"]].each_with_index do |(icon, key), i| %>
+          <li class="hv-beat" data-beat="proof-<%= i + 1 %>">
+            <span class="hv-proof-icon"><i class="ph-fill <%= icon %>"></i></span>
+            <%= t("pages.hero_video.proof.#{key}") %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+
+    <%# ── 7. CTA ── %>
+    <div class="hv-scene hv-scene--center" data-hero-video-target="scene">
+      <h2 class="hv-title hv-title--xl hv-beat" data-beat="cta-title"><%= t("pages.hero_video.cta.title") %></h2>
+      <p class="hv-body hv-beat" data-beat="cta-body"><%= t("pages.hero_video.cta.body") %></p>
+      <div class="hv-cta hv-beat" data-beat="cta-button">
+        <%= link_to official_whatsapp_url, target: "_blank", rel: "noopener",
+              class: "hv-cta-button inline-flex items-center justify-center gap-2 bg-(--color-brand) hover:bg-(--color-brand-dark) text-white font-semibold px-7 py-4 rounded-xl transition-colors" do %>
+          <i class="ph ph-whatsapp-logo text-xl"></i>
+          <%= t("pages.hero_video.cta.button") %>
+        <% end %>
+        <button type="button" class="hv-replay" data-action="hero-video#jump" data-hero-video-index-param="0">
+          <i class="ph-bold ph-arrow-counter-clockwise"></i><%= t("pages.hero_video.cta.replay") %>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

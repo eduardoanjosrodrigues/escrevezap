@@ -1,0 +1,26 @@
+<%# Voice note bubble as drawn by WhatsApp on iOS. locals: avatar (html), duration, time, ticks (bool) %>
+<% wave = [4, 7, 11, 16, 9, 13, 18, 12, 7, 14, 19, 13, 9, 15, 11, 6, 10, 16, 12, 8, 11, 15, 9, 6, 8, 12, 7, 5] %>
+<div class="wa-voice">
+  <i class="ph-fill ph-play wa-voice-play"></i>
+  <div class="wa-voice-track">
+    <div class="wa-wave">
+      <% wave.each do |h| %><span style="height: <%= h %>px"></span><% end %>
+    </div>
+    <div class="wa-voice-info">
+      <span><%= duration %></span>
+      <span class="inline-flex items-center gap-1">
+        <%= time %>
+        <% if local_assigns[:ticks] %>
+          <span class="wa-ticks" data-whatsapp-demo-target="ticks">
+            <i class="ph ph-check wa-tick-single"></i>
+            <i class="ph ph-checks wa-tick-double"></i>
+          </span>
+        <% end %>
+      </span>
+    </div>
+  </div>
+  <div class="wa-voice-avatar">
+    <%= avatar %>
+    <i class="ph-fill ph-microphone"></i>
+  </div>
+</div>

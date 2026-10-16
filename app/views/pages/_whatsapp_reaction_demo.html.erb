@@ -1,0 +1,57 @@
+<%# Animated demo (Pro, "Transcrever no chat"): the user reacts to an audio
+    with an emoji and the transcription shows up in the same conversation,
+    sent from their own number as a reply that is edited in place. %>
+<% client_avatar = tag.div(t("pages.whatsapp_reaction_demo.contact_initials"), class: "wa-avatar wa-avatar--client") %>
+
+<%= render layout: "pages/whatsapp_demo_frame",
+           locals: { autoplay: local_assigns.fetch(:autoplay, true), speed: local_assigns.fetch(:speed, 1), scenario: "reaction", scope: "pages.whatsapp_reaction_demo", steps: %w[react wait read] } do %>
+
+  <section class="wa-view wa-view--contact">
+    <%= render "pages/whatsapp_demo_header", avatar: client_avatar, name: t("pages.whatsapp_reaction_demo.contact_name"), alt_status: :recording, target: "contactHeader" %>
+
+    <div class="wa-body">
+      <span class="wa-chip"><%= t("pages.whatsapp_demo.today") %></span>
+      <div class="wa-row wa-row--in">
+        <div class="wa-bubble has-tail"><%= t("pages.whatsapp_reaction_demo.message_in") %><span class="wa-meta">10:02</span></div>
+      </div>
+      <div class="wa-row wa-row--out wa-row--gap">
+        <div class="wa-bubble has-tail">
+          <%= t("pages.whatsapp_reaction_demo.message_out") %>
+          <span class="wa-meta">10:05 <span class="wa-ticks wa-ticks--read"><i class="ph ph-check wa-tick-single"></i><i class="ph ph-checks wa-tick-double"></i></span></span>
+        </div>
+      </div>
+      <div class="wa-row wa-row--in wa-row--gap wa-row--target is-pending" data-demo-row data-whatsapp-demo-target="incomingAudio">
+        <%= render "pages/whatsapp_demo_reactions" %>
+        <div class="wa-bubble has-tail" data-whatsapp-demo-target="audioBubble">
+          <%= render "pages/whatsapp_demo_voice", avatar: client_avatar, duration: t("pages.whatsapp_reaction_demo.audio_duration"), time: "10:14" %>
+          <span class="wa-reaction-badge" data-whatsapp-demo-target="reactionBadge">👍</span>
+        </div>
+        <%= render "pages/whatsapp_demo_menu" %>
+      </div>
+      <div class="wa-row wa-row--out wa-row--gap is-pending" data-demo-row data-whatsapp-demo-target="reply">
+        <div class="wa-bubble has-tail">
+          <div class="wa-quote">
+            <strong><%= t("pages.whatsapp_reaction_demo.contact_name") %></strong>
+            <span><i class="ph-fill ph-microphone"></i> <%= t("pages.whatsapp_reaction_demo.quoted_audio") %></span>
+          </div>
+          <div class="wa-reply-placeholder"><em><%= t("pages.whatsapp_reaction_demo.placeholder") %></em></div>
+          <div class="wa-reply-content">
+            <div class="wa-reply-heading">📝 <strong><%= t("pages.whatsapp_reaction_demo.summary_heading") %></strong></div>
+            <div data-whatsapp-demo-target="reveal" data-text="<%= t("pages.whatsapp_reaction_demo.summary") %>"><%= t("pages.whatsapp_reaction_demo.summary") %></div>
+            <div class="wa-reply-divider">───────────────</div>
+            <div class="wa-reply-heading">📄 <strong><%= t("pages.whatsapp_reaction_demo.transcript_heading") %></strong></div>
+            <div data-whatsapp-demo-target="reveal" data-text="<%= t("pages.whatsapp_reaction_demo.transcript") %>"><%= t("pages.whatsapp_reaction_demo.transcript") %></div>
+          </div>
+          <span class="wa-meta">
+            <span class="wa-edited"><%= t("pages.whatsapp_reaction_demo.edited") %></span> 10:15
+            <span class="wa-ticks" data-whatsapp-demo-target="ticks"><i class="ph ph-check wa-tick-single"></i><i class="ph ph-checks wa-tick-double"></i></span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="wa-overlay" data-whatsapp-demo-target="overlay"></div>
+
+    <%= render "pages/whatsapp_demo_composer" %>
+  </section>
+<% end %>

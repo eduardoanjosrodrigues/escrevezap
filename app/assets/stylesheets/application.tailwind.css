@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "intl-tel-input/styles";
+@import "./whatsapp_demo.css";
+@import "./hero_video.css";
 @plugin "flowbite/plugin";
 @source "../../../node_modules/flowbite";
 

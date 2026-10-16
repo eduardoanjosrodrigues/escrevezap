@@ -255,6 +255,130 @@ pt-BR:
       cta_bottom_title:   "Comece a ler em vez de ouvir"
       cta_bottom_body:    "Grátis para sempre. Sem cartão de crédito."
 
+    whatsapp_demo:
+      aria_label:       "Demonstração animada: a Tia Marta manda um áudio longo no WhatsApp, você segura o áudio, encaminha para o EscreveZap e a transcrição chega em segundos."
+      pause:            "Pausar animação"
+      play:             "Reproduzir animação"
+      clock:            "9:41"
+      today:            "Hoje"
+      online:           "online"
+      recording:        "gravando áudio…"
+      typing:           "digitando…"
+      contact_name:     "Tia Marta"
+      contact_initials: "TM"
+      bot_name:         "EscreveZap"
+      bot_hint:         "Transcreve seus áudios"
+      greeting_in:      "Bom dia, flor! ☀️"
+      greeting_out:     "Bom dia, tia! 💚"
+      audio_duration:   "1:47"
+      follow_up:        "ouve com calma, é importante 😘"
+      menu:
+        reply:   "Responder"
+        forward: "Encaminhar"
+        star:    "Favoritar"
+        pin:     "Fixar"
+        select:  "Selecionar"
+        delete:  "Apagar"
+      selected:         "1 selecionada"
+      cancel:           "Cancelar"
+      forward_title:    "Encaminhar"
+      search:           "Buscar"
+      recent:           "Conversas recentes"
+      contacts:
+        mom:    "Mãe"
+        work:   "Trabalho"
+        friend: "Lucas"
+      forwarded:          "Encaminhada"
+      transcript_heading: "Transcrição"
+      transcript:         "Oi, querida! Tô passando pra lembrar do almoço de domingo aqui em casa, meio-dia em ponto. Traz aquela farofa que todo mundo ama e, se der, passa no mercado e compra dois guaranás. Ah, e confirma com o Lucas se ele vem, tá? Beijo!"
+      branding:           "via EscreveZap"
+      badge_title:        "1:47 de áudio"
+      badge_body:         "lido em 10 segundos"
+      steps:
+        hold:    "Segure o áudio"
+        forward: "Encaminhe"
+        read:    "Leia o texto"
+
+    hero_video:
+      aria_label: "Vídeo animado: como o EscreveZap transforma áudios do WhatsApp em texto"
+      scenes:
+        hook:    "O problema"
+        pain:    "No dia a dia"
+        turn:    "A virada"
+        forward: "Como funciona"
+        pro:     "Plano Pro"
+        proof:   "Vantagens"
+        cta:     "Teste grátis"
+      go_to: "Ir para: %{scene}"
+      hook:
+        title: "Mais um áudio de 4 minutos?"
+        date:  "quinta-feira, 16 de outubro"
+        now:   "agora"
+        voice_message: "🎤 Mensagem de voz (%{duration})"
+        notifications:
+          - ["Tia Marta", "4:12"]
+          - ["Chefe", "2:58"]
+          - ["Juliana · Cliente", "3:40"]
+          - ["Família 💛", "6:05"]
+      pain:
+        eyebrow: "Todo santo dia"
+        meeting: "Tá numa reunião."
+        bus:     "Tá no ônibus sem fone."
+        baby:    "Tá com o bebê dormindo."
+        rewind:     "E ainda ouve em 2x…"
+        rewind_sub: "e perde o horário que ela falou."
+        meeting_card: "Reunião"
+        bus_card:     "Sem fone"
+        baby_card:    "Bebê dormindo"
+        back:         "15s"
+      turn:
+        before: "E se você pudesse"
+        strike: "ouvir"
+        word:   "ler"
+        after:  "o áudio?"
+      forward:
+        eyebrow: "Grátis"
+        title:   "Encaminhe pro EscreveZap."
+        body:    "Em segundos, o texto chega no seu WhatsApp. Sem instalar nada."
+        counter: "1:47 de áudio → 10 segundos de leitura"
+      pro:
+        eyebrow:       "Pro"
+        title:         "No Pro, é só reagir com um emoji 👍"
+        body:          "A transcrição aparece na própria conversa, respondendo o áudio."
+        summary_title: "O que importa, em 3 linhas."
+        summary_body:  "Resumo rápido com IA em cada áudio, e a transcrição completa logo abaixo."
+      proof:
+        title: "Simples assim."
+        no_install:   "Sem instalar nada"
+        own_whatsapp: "Funciona no seu próprio WhatsApp"
+        ai_summary:   "Resumo com IA no Pro"
+      cta:
+        title:  "Pare de ouvir. Comece a ler."
+        body:   "Teste grátis: 20 transcrições por mês, sem cadastro."
+        button: "Testar grátis no WhatsApp"
+        replay: "Assistir de novo"
+
+    whatsapp_reaction_demo:
+      aria_label:         "Demonstração animada do Transcrever no chat: a Juliana manda um áudio, você reage com 👍 e a transcrição com resumo aparece respondendo o áudio na própria conversa."
+      contact_name:       "Juliana"
+      contact_initials:   "JU"
+      message_in:         "Oi! Vi o orçamento 😊"
+      message_out:        "Oi, Juliana! Qualquer dúvida é só falar"
+      audio_duration:     "2:36"
+      quoted_audio:       "Mensagem de voz (2:36)"
+      placeholder:        "⏳ Transcrevendo com o EscreveZap! Aguarde um instante..."
+      summary_heading:    "Resumo rápido"
+      summary:            "Fechou a cozinha com quartzo branco no lugar do granito. Prazo: dia 20. Pagamento: metade agora no Pix, metade na entrega."
+      transcript_heading: "Transcrição completa"
+      transcript:         "Oi, tudo bem? Então, a gente decidiu fechar a cozinha com vocês, mas queria trocar o granito pelo quartzo branco, tá? O prazo ideal é até o dia 20, porque minha mãe chega dia 22. E o pagamento pode ser metade agora no Pix e o resto na entrega. Obrigada!"
+      edited:             "Editada"
+      badge_title:        "Na própria conversa"
+      badge_body:         "sem encaminhar nada"
+      steps:
+        react: "Reaja ao áudio"
+        wait:  "Aguarde"
+        read:  "Leia na conversa"
+
     pricing:
       title:    "Planos simples e transparentes"
       subtitle: "Escolha o plano que combina com você. Cancele quando quiser."
