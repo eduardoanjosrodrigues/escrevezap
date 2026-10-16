@@ -21,11 +21,11 @@ module ApplicationHelper
   # (User.acquisition_from). O JS da landing acrescenta o canal (~google,
   # ~instagram, utm) antes do clique.
   def official_whatsapp_url(ref = "site")
-    "https://wa.me/558296801867?text=#{ERB::Util.url_encode("Oi! Quero testar o EscreveZap 🎙️ [#{ref}]")}"
+    "https://wa.me/#{BOT_PHONE_NUMBER}?text=#{ERB::Util.url_encode("Oi! Quero testar o EscreveZap 🎙️ [#{ref}]")}"
   end
 
   # Assinaturas são feitas pelo bot (Pix Automático do Inter).
   def whatsapp_subscribe_url(plan)
-    "https://wa.me/558296801867?text=#{ERB::Util.url_encode("Quero assinar o plano #{plan.to_s.capitalize}")}"
+    "https://wa.me/#{BOT_PHONE_NUMBER}?text=#{ERB::Util.url_encode("Quero assinar o plano #{plan.to_s.capitalize}")}"
   end
 end

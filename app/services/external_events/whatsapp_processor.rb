@@ -180,6 +180,14 @@ class ExternalEvents::WhatsappProcessor < ExternalEvents::Base
     chat_id = payload[:from].to_s
     phone   = chat_id.split("@").first
 
+    # A conversa com o bot já é transcrita pelo fluxo direto (Meta). Transcrever
+    # de novo pela sessão conectada gasta cota em dobro e manda o placeholder
+    # para o bot, que o trata como pergunta e repassa para o time.
+    if phone == BOT_PHONE_NUMBER
+      log_info "Áudio ignorado: conversa com o próprio bot"
+      return
+    end
+
     contact = resolve_or_auto_create_contact(phone, chat_id, from_me: from_me)
     return if contact.nil?
 
