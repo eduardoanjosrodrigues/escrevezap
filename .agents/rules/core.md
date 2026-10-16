@@ -62,7 +62,7 @@ or
 | Pagination                | Pagy                                 |
 | Deployment                | Kamal + Docker                       |
 | Speech-to-text            | Deepgram                             |
-| Billing                   | AbacatePay                           |
+| Billing                   | Banco Inter (Pix Automático)         |
 | Messaging Provider        | External WhatsApp provider           |
 
 ---
@@ -596,7 +596,7 @@ Good examples:
 DeepgramTranscriber
 WhatsappProvider
 LlmFormatter
-AbacatePayClient
+Inter::PixService
 ```
 
 Bad examples:

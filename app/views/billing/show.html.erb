@@ -151,39 +151,20 @@
           <% end %>
         </ul>
 
-        <% if has_active_sub %>
-          <%= link_to billing_change_plan_confirm_path(plan: upgrade_plan),
-                data: { turbo_frame: "modal" },
-                class: "w-full mt-1 inline-flex items-center justify-center gap-2 bg-white text-(--color-brand) hover:bg-white/90 font-bold px-4 py-3 rounded-2xl text-sm transition-colors" do %>
-            Fazer upgrade para <%= target[:label] %>
-            <i class="ph ph-arrow-right"></i>
-          <% end %>
-        <% else %>
-          <%= button_to billing_upgrade_path(plan: upgrade_plan),
-                method: :post,
-                data: { turbo: false, controller: "loadable", "loadable-loading-text-value": "Redirecionando..." },
-                class: "w-full mt-1 inline-flex items-center justify-center gap-2 bg-white text-(--color-brand) hover:bg-white/90 font-bold px-4 py-3 rounded-2xl text-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed" do %>
-            Assinar <%= target[:label] %>
-            <i class="ph ph-arrow-right"></i>
-          <% end %>
+        <%= link_to whatsapp_subscribe_url(upgrade_plan),
+              target: "_blank", rel: "noopener",
+              class: "w-full mt-1 inline-flex items-center justify-center gap-2 bg-white text-(--color-brand) hover:bg-white/90 font-bold px-4 py-3 rounded-2xl text-sm transition-colors" do %>
+          Assinar <%= target[:label] %>
+          <i class="ph ph-arrow-right"></i>
         <% end %>
 
         <% if alt_plan %>
           <% alt = plans[alt_plan] %>
           <div class="pt-1">
-            <% if has_active_sub %>
-              <%= link_to billing_change_plan_confirm_path(plan: alt_plan),
-                    data: { turbo_frame: "modal" },
-                    class: "w-full inline-flex items-center justify-center gap-2 text-white/90 hover:text-white text-xs font-medium underline underline-offset-2" do %>
-                Ou comece com <%= alt[:label] %> · <%= alt[:price] %>/mês
-              <% end %>
-            <% else %>
-              <%= button_to billing_upgrade_path(plan: alt_plan),
-                    method: :post,
-                    data: { turbo: false, controller: "loadable", "loadable-loading-text-value": "Redirecionando..." },
-                    class: "w-full inline-flex items-center justify-center gap-2 text-white/90 hover:text-white text-xs font-medium underline underline-offset-2 bg-transparent border-none p-0 disabled:opacity-60 disabled:cursor-not-allowed" do %>
-                Ou comece com <%= alt[:label] %> · <%= alt[:price] %>/mês
-              <% end %>
+            <%= link_to whatsapp_subscribe_url(alt_plan),
+                  target: "_blank", rel: "noopener",
+                  class: "w-full inline-flex items-center justify-center gap-2 text-white/90 hover:text-white text-xs font-medium underline underline-offset-2" do %>
+              Ou comece com <%= alt[:label] %> · <%= alt[:price] %>/mês
             <% end %>
           </div>
         <% end %>
@@ -227,21 +208,11 @@
           </div>
 
           <% if current_plan != key && key != "free" %>
-            <% if has_active_sub %>
-              <%= link_to billing_change_plan_confirm_path(plan: key),
-                    data: { turbo_frame: "modal" },
-                    class: "flex-shrink-0 w-9 h-9 rounded-full bg-(--color-brand) hover:bg-(--color-brand-dark) text-white flex items-center justify-center transition-colors",
-                    aria: { label: "Mudar para #{plan[:label]}" } do %>
-                <i class="ph ph-arrow-right text-sm"></i>
-              <% end %>
-            <% else %>
-              <%= button_to billing_upgrade_path(plan: key),
-                    method: :post,
-                    data: { turbo: false, controller: "loadable", "loadable-loading-text-value": "..." },
-                    class: "flex-shrink-0 w-9 h-9 rounded-full bg-(--color-brand) hover:bg-(--color-brand-dark) text-white flex items-center justify-center transition-colors disabled:opacity-60 disabled:cursor-not-allowed",
-                    aria: { label: "Assinar #{plan[:label]}" } do %>
-                <i class="ph ph-arrow-right text-sm"></i>
-              <% end %>
+            <%= link_to whatsapp_subscribe_url(key),
+                  target: "_blank", rel: "noopener",
+                  class: "flex-shrink-0 w-9 h-9 rounded-full bg-(--color-brand) hover:bg-(--color-brand-dark) text-white flex items-center justify-center transition-colors",
+                  aria: { label: "Assinar #{plan[:label]}" } do %>
+              <i class="ph ph-arrow-right text-sm"></i>
             <% end %>
           <% end %>
         </div>

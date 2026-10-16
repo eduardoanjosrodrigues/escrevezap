@@ -174,71 +174,6 @@ module Reply
       end
     end
 
-    def generate_abacatepay_checkout(plan)
-      send_message(message: "⏳ *Gerando seu link de pagamento seguro...* Aguarde um momento.")
-
-      product_id = case plan
-      when "basic" then Rails.application.credentials.dig(:abacatepay, :product_basic_id)
-      when "pro"   then Rails.application.credentials.dig(:abacatepay, :product_pro_id)
-      end
-
-      if product_id.blank?
-        send_message(message: "⚠️ Desculpe, a assinatura para o plano #{plan.capitalize} está indisponível no momento. Tente novamente mais tarde.")
-        show_billing
-        return
-      end
-
-      external_id = "user_#{@user.id}:#{plan}:#{Time.current.to_i}"
-      return_url = "https://wa.me/558296801867"
-
-      response = Abacatepay::Client.new.subscriptions.create(
-        product_id:     product_id,
-        external_id:    external_id,
-        completion_url: return_url,
-        return_url:     return_url
-      )
-
-      if response["success"]
-        checkout_url = response.dig("data", "url")
-        body_text = <<~MSG
-          ⚡ *Pronto! Seu link de pagamento foi gerado:*
-
-          Clique no botão abaixo para concluir a assinatura do plano *#{plan.capitalize}*.
-
-          Assim que a confirmação for recebida pelo nosso sistema, seu limite será atualizado na hora e eu te aviso aqui!
-        MSG
-
-        send_cta_url_message(
-          body_text: body_text,
-          button_text: "Realizar Pagamento ⚡",
-          url: checkout_url
-        )
-
-        sleep 1.second
-
-        send_list_message(
-          body_text: "Você pode usar as opções abaixo para acompanhar sua assinatura ou pedir ajuda:",
-          button_text: "Opções",
-          sections: [
-            {
-              title: "Acompanhamento",
-              rows: [
-                { id: "menu_billing", title: "🔄 Já paguei", description: "Verificar se o plano já atualizou" },
-                { id: "menu_support", title: "🚨 Dificuldade para pagar", description: "Falar com nosso suporte" },
-                { id: "cancel_connection", title: "❌ Voltar ao Menu", description: "Voltar para o menu principal" }
-              ]
-            }
-          ]
-        )
-      else
-        error_msg = response["error"].presence || "Erro no checkout"
-        Rails.logger.error "[Reply::Base#generate_upgrade_checkout] AbacatePay error: #{error_msg}"
-        send_message(message: "⚠️ Não foi possível iniciar o checkout via Pix. Por favor, tente novamente.")
-        sleep 0.5.seconds
-        show_menu
-      end
-    end
-
     def process_subscription_cancellation
       subscription = @user.subscription
 
@@ -248,36 +183,10 @@ module Reply
         return
       end
 
-      if subscription.provider == "inter"
-        begin
-          if subscription.inter_recorrencia_id.present?
-            Inter::PixService.cancel_automatic_pix(subscription.inter_recorrencia_id)
-          end
-          subscription.update!(status: :cancelled, cancelled_at: Time.current)
-          @user.update!(plan: :free)
-          send_message(message: "🚫 Sua assinatura via Pix Automático foi cancelada com sucesso. Você foi migrado de volta para o plano Grátis.")
-        rescue => e
-          Sentry.capture_exception(e)
-          raise e unless Rails.env.production?
-
-          Rails.logger.error "[Reply::Billing#process_subscription_cancellation] Inter error: #{e.message}"
-          subscription.update!(status: :cancelled, cancelled_at: Time.current)
-          @user.update!(plan: :free)
-          send_message(message: "🚫 Sua assinatura foi cancelada localmente com sucesso. Caso o débito automático continue ativo no seu banco, você pode cancelá-lo diretamente pelo aplicativo da sua instituição financeira.")
-        end
+      if subscription.cancel!
+        send_message(message: "🚫 Sua assinatura via Pix Automático foi cancelada com sucesso. Você foi migrado de volta para o plano Grátis.")
       else
-        response = Abacatepay::Client.new.subscriptions.cancel(
-          id: subscription.abacatepay_subscription_id
-        )
-
-        if response["success"]
-          subscription.update!(status: :cancelled, cancelled_at: Time.current)
-          @user.update!(plan: :free)
-          send_message(message: "🚫 Assinatura cancelada com sucesso. Você foi migrado de volta para o plano Grátis.")
-        else
-          Rails.logger.error "[Reply::Base#process_subscription_cancellation] AbacatePay error: #{response['error']}"
-          send_message(message: "⚠️ Não foi possível processar o cancelamento automático. Por favor, entre em contato com nosso suporte pelo email ola@escrevezap.com.br")
-        end
+        send_message(message: "🚫 Sua assinatura foi cancelada localmente com sucesso. Caso o débito automático continue ativo no seu banco, você pode cancelá-lo diretamente pelo aplicativo da sua instituição financeira.")
       end
 
       sleep 0.5.seconds

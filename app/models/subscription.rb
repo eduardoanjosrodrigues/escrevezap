@@ -1,7 +1,7 @@
 class Subscription < ApplicationRecord
   belongs_to :user
 
-  validates :provider, presence: true, inclusion: { in: %w[abacatepay inter] }
+  validates :provider, presence: true, inclusion: { in: %w[inter] }
 
   enum :status, {
     inactive:  "inactive",
@@ -44,6 +44,24 @@ class Subscription < ApplicationRecord
 
   def cobr_created_for_next_charge?
     inter_cobr_txid.present? && inter_cobr_due_date == next_charge_date
+  end
+
+  # Cancela o Pix Automático no Inter e a assinatura aqui. Retorna false se o
+  # Inter falhou: a assinatura é cancelada localmente mesmo assim e o usuário
+  # pode cancelar o débito pelo app do banco.
+  def cancel!
+    cancelled_at_inter = begin
+      Inter::PixService.cancel_automatic_pix(inter_recorrencia_id) if inter_recorrencia_id.present?
+      true
+    rescue => e
+      Rails.logger.error "[Subscription#cancel!] Inter error: #{e.message}"
+      Sentry.capture_exception(e)
+      false
+    end
+
+    update!(status: :cancelled, cancelled_at: Time.current)
+    user.update!(plan: :free)
+    cancelled_at_inter
   end
 
   def active_or_trialing?

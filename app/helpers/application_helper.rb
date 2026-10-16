@@ -19,4 +19,9 @@ module ApplicationHelper
   def official_whatsapp_url
     "https://wa.me/558296801867?text=Oi!%20Gostaria%20de%20conhecer%20os%20servi%C3%A7os"
   end
+
+  # Assinaturas são feitas pelo bot (Pix Automático do Inter).
+  def whatsapp_subscribe_url(plan)
+    "https://wa.me/558296801867?text=#{ERB::Util.url_encode("Quero assinar o plano #{plan.to_s.capitalize}")}"
+  end
 end

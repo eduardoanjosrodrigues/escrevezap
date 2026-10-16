@@ -171,7 +171,7 @@ Do not silently fail.
 
 Billing provider:
 
-AbacatePay.
+Banco Inter (Pix Automático, via `Inter::PixService`).
 
 Keep billing simple.
 

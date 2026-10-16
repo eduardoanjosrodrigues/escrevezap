@@ -84,9 +84,6 @@ Rails.application.routes.draw do
       # Billing / upgrade flow
       scope "/assinatura" do
         get    "",               to: "billing#show",         as: :billing
-        post   "upgrade",        to: "billing#upgrade",       as: :billing_upgrade
-        post   "trocar-plano",            to: "billing#change_plan",         as: :billing_change_plan
-        get    "trocar-plano/confirmar",    to: "billing#change_plan_confirm",  as: :billing_change_plan_confirm
         get    "cancelar",                 to: "billing#cancel_confirm",       as: :billing_cancel_confirm
         delete "cancelar",       to: "billing#cancel",        as: :billing_cancel
         get    "obrigado",       to: "billing#success",       as: :billing_success
@@ -106,7 +103,6 @@ Rails.application.routes.draw do
 
   namespace :webhook do
     resource :waha,       only: [ :create ], controller: :waha
-    resource :abacate_pay, only: [ :create ], controller: :abacate_pay
     resource :inter,      only: [ :create ], controller: :inter
 
     get "meta", to: "meta#index"

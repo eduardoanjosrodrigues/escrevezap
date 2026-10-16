@@ -50,16 +50,9 @@
           </li>
         <% end %>
       </ul>
-      <% if user_signed_in? %>
-        <%= button_to t("pages.pricing.cta_paid"), billing_upgrade_path(plan: "basic"),
-              method: :post,
-              class: "mt-6 block text-center bg-(--color-surface-raised) hover:bg-(--color-border) text-(--color-text) font-medium px-4 py-2.5 rounded-xl text-sm transition-colors",
-              data: { controller: "loadable", "loadable-loading-text-value": "Redirecionando..." } %>
-      <% else %>
-        <%= link_to t("pages.pricing.cta_paid"), official_whatsapp_url,
-              target: "_blank", rel: "noopener",
-              class: "mt-6 block text-center bg-(--color-surface-raised) hover:bg-(--color-border) text-(--color-text) font-medium px-4 py-2.5 rounded-xl text-sm transition-colors" %>
-      <% end %>
+      <%= link_to t("pages.pricing.cta_paid"), user_signed_in? ? whatsapp_subscribe_url("basic") : official_whatsapp_url,
+            target: "_blank", rel: "noopener",
+            class: "mt-6 block text-center bg-(--color-surface-raised) hover:bg-(--color-border) text-(--color-text) font-medium px-4 py-2.5 rounded-xl text-sm transition-colors" %>
     </div>
 
     <%# Pro — highlighted %>
@@ -83,16 +76,9 @@
           </li>
         <% end %>
       </ul>
-      <% if user_signed_in? %>
-        <%= button_to t("pages.pricing.cta_paid"), billing_upgrade_path(plan: "pro"),
-              method: :post,
-              class: "mt-6 block text-center bg-white text-(--color-brand) font-semibold px-4 py-2.5 rounded-xl text-sm hover:bg-(--color-brand-light) transition-colors",
-              data: { controller: "loadable", "loadable-loading-text-value": "Redirecionando..." } %>
-      <% else %>
-        <%= link_to t("pages.pricing.cta_paid"), official_whatsapp_url,
-              target: "_blank", rel: "noopener",
-              class: "mt-6 block text-center bg-white text-(--color-brand) font-semibold px-4 py-2.5 rounded-xl text-sm hover:bg-(--color-brand-light) transition-colors" %>
-      <% end %>
+      <%= link_to t("pages.pricing.cta_paid"), user_signed_in? ? whatsapp_subscribe_url("pro") : official_whatsapp_url,
+            target: "_blank", rel: "noopener",
+            class: "mt-6 block text-center bg-white text-(--color-brand) font-semibold px-4 py-2.5 rounded-xl text-sm hover:bg-(--color-brand-light) transition-colors" %>
     </div>
   </div>
 </div>
