@@ -30,7 +30,13 @@
       <div class="col-span-2 bg-(--color-surface) border border-(--color-border) rounded-2xl px-4 py-4">
         <p class="text-xs text-(--color-text-muted) mb-1">Transcrições este mês</p>
         <p class="text-3xl font-bold text-(--color-brand)"><%= @month_count %></p>
-        <p class="text-xs text-(--color-text-subtle) mt-1">de <%= current_user.transcription_limit %> no plano <%= current_user.plan %></p>
+        <p class="text-xs text-(--color-text-subtle) mt-1">
+          <% if current_user.lifetime_quota? %>
+            <%= current_user.transcriptions_used_for_display %> de <%= current_user.transcription_limit %> transcrições grátis usadas
+          <% else %>
+            de <%= current_user.transcription_limit %> no plano <%= current_user.plan %>
+          <% end %>
+        </p>
       </div>
     </div>
   <% end %>
@@ -74,11 +80,12 @@
   <% if show_usage %>
     <%# ── Usage bar ──────────────────────────────────────────────────────── %>
     <% limit = current_user.transcription_limit %>
-    <% pct   = [((@month_count.to_f / limit) * 100).round, 100].min %>
+    <% used  = current_user.transcriptions_used_for_display %>
+    <% pct   = [((used.to_f / limit) * 100).round, 100].min %>
     <div>
       <div class="flex justify-between text-xs text-(--color-text-muted) mb-1.5">
         <span>Uso do plano</span>
-        <span><%= @month_count %>/<%= limit %></span>
+        <span><%= used %>/<%= limit %></span>
       </div>
       <div class="w-full h-2 bg-(--color-surface-raised) rounded-full overflow-hidden">
         <div class="h-full rounded-full transition-all <%= pct >= 90 ? 'bg-(--color-danger)' : 'bg-(--color-brand)' %>"

@@ -1,7 +1,7 @@
 module Admin
   class DashboardController < Admin::BaseController
-    BASIC_PRICE = 5.99
-    PRO_PRICE   = 19.90
+    BASIC_PRICE = Subscription::PRICES["basic"]
+    PRO_PRICE   = Subscription::PRICES["pro"]
 
     def index
       today       = Date.current

@@ -291,7 +291,6 @@ pt-BR:
       forwarded:          "Encaminhada"
       transcript_heading: "Transcrição"
       transcript:         "Oi, querida! Tô passando pra lembrar do almoço de domingo aqui em casa, meio-dia em ponto. Traz aquela farofa que todo mundo ama e, se der, passa no mercado e compra dois guaranás. Ah, e confirma com o Lucas se ele vem, tá? Beijo!"
-      branding:           "via EscreveZap"
       badge_title:        "1:47 de áudio"
       badge_body:         "lido em 10 segundos"
       steps:
@@ -354,7 +353,7 @@ pt-BR:
         ai_summary:   "Resumo com IA no Pro"
       cta:
         title:  "Pare de ouvir. Comece a ler."
-        body:   "Teste grátis: 20 transcrições por mês, sem cadastro."
+        body:   "Teste grátis: 5 áudios, sem cadastro e sem cartão."
         button: "Testar grátis no WhatsApp"
         replay: "Assistir de novo"
 
@@ -390,15 +389,14 @@ pt-BR:
         name:        "Grátis"
         description: "Para conhecer o produto."
         features:
-          - "20 transcrições por mês"
+          - "5 áudios para testar"
           - "Encaminhe áudios e receba o texto"
-          - "Teste o Transcrever no chat (20/mês)"
-          - "Marca EscreveZap nas respostas"
+          - "Sem cadastro e sem cartão"
       basic:
         name:        "Basic"
         description: "Para uso moderado."
         features:
-          - "500 transcrições por mês"
+          - "100 transcrições por mês"
           - "Sem marca nas respostas"
           - "Teste o Transcrever no chat (20/mês)"
           - "Suporte por email"

@@ -159,7 +159,7 @@
       <h2 class="hv-title hv-title--xl hv-beat" data-beat="cta-title"><%= t("pages.hero_video.cta.title") %></h2>
       <p class="hv-body hv-beat" data-beat="cta-body"><%= t("pages.hero_video.cta.body") %></p>
       <div class="hv-cta hv-beat" data-beat="cta-button">
-        <%= link_to official_whatsapp_url, target: "_blank", rel: "noopener",
+        <%= link_to official_whatsapp_url("home-video"), target: "_blank", rel: "noopener",
               class: "hv-cta-button inline-flex items-center justify-center gap-2 bg-(--color-brand) hover:bg-(--color-brand-dark) text-white font-semibold px-7 py-4 rounded-xl transition-colors" do %>
           <i class="ph ph-whatsapp-logo text-xl"></i>
           <%= t("pages.hero_video.cta.button") %>

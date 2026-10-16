@@ -1,6 +1,10 @@
 <p>Olá <%= @user.display_name %>,</p>
 
+<% if @user.lifetime_quota? %>
+<p>Você utilizou as <%= @user.transcription_limit %> transcrições grátis do EscreveZap.</p>
+<% else %>
 <p>Você utilizou todas as <%= @user.transcription_limit %> transcrições do seu plano <%= @user.plan.capitalize %> neste mês.</p>
+<% end %>
 
 <p>Para continuar recebendo suas transcrições e resumos automaticamente no WhatsApp, faça o upgrade do seu plano.</p>
 

@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { track } from "../analytics"
 
 // Plays the landing hero "video" — the sales script as an HTML animation:
 // hook → pain → turn → forward demo → Pro demo → proof → CTA, on a loop.
@@ -6,7 +7,12 @@ import { Controller } from "@hotwired/stimulus"
 // adding .is-shown. Scenes 4 and 5 drive the phone demos (whatsapp-demo).
 // Runs only while on screen; reduced-motion users get static scenes they can
 // flip through with the progress segments.
+//
+// Umami: video-start, video-scene { scene, index } (first time each scene is
+// reached per page view: how far people watch), video-pause / video-resume
+// { scene }, video-jump { from, to }, video-replay.
 const CANCELLED = Symbol("cancelled")
+const SCENE_NAMES = ["hook", "pain", "turn", "forward", "pro", "proof", "cta"]
 const EXTRA_STATES = ["is-gone", "is-playing", "is-rewind"]
 
 export default class extends Controller {
@@ -18,6 +24,7 @@ export default class extends Controller {
     this.index = 0
     this.paused = false
     this.visible = false
+    this.seenScenes = new Set()
     // duration: estimate used only to pace the progress bar
     this.scenes = [
       { duration: 3800, run: (wait) => this.hook(wait) },
@@ -55,11 +62,14 @@ export default class extends Controller {
   // ── Controls ─────────────────────────────────────────────────────────
   toggle() {
     this.paused = !this.paused
+    track(this.paused ? "video-pause" : "video-resume", { scene: SCENE_NAMES[this.index] })
     this.paused ? this.stop() : this.play()
     this.syncToggle()
   }
 
-  jump({ params: { index } }) {
+  jump({ params: { index }, currentTarget }) {
+    if (currentTarget?.classList.contains("hv-replay")) track("video-replay")
+    else track("video-jump", { from: SCENE_NAMES[this.index], to: SCENE_NAMES[index] })
     if (this.reduced) return this.showStatic(index)
     this.stop()
     this.index = index
@@ -111,6 +121,11 @@ export default class extends Controller {
 
   activate(index) {
     const scene = this.sceneTargets[index]
+    if (!this.reduced && !this.seenScenes.has(index)) {
+      if (this.seenScenes.size === 0) track("video-start")
+      this.seenScenes.add(index)
+      track("video-scene", { scene: SCENE_NAMES[index], index })
+    }
     this.sceneTargets.forEach((el, i) => el.classList.toggle("is-active", i === index))
     this.stageTarget.classList.toggle("is-dark", scene.hasAttribute("data-dark"))
     for (const beat of scene.querySelectorAll("[data-beat]")) beat.classList.remove("is-shown", ...EXTRA_STATES)

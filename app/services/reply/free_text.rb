@@ -1,16 +1,18 @@
 module Reply
   # Texto livre (fora de botões/listas): responde perguntas frequentes por
   # palavra-chave, repassa perguntas desconhecidas para o time e protege contra
-  # outros bots que ficam respondendo o nosso menu em loop.
+  # outros bots que ficam respondendo o nosso menu em loop. O menu só aparece
+  # quando pedido ("menu"); fora isso, lembramos que é só encaminhar o áudio.
   module FreeText
     LOOP_WINDOW    = 5.minutes
     LOOP_THRESHOLD = 10
     LOOP_SILENCE   = 6.hours
-    # Mensagens curtas não reconhecidas ("oi", "menu", "ok") só abrem o menu;
-    # as mais longas costumam ser perguntas e vão para o time.
+    # Mensagens curtas não reconhecidas ("oi", "ok") ganham um lembrete de
+    # como usar; as mais longas costumam ser perguntas e vão para o time.
     QUESTION_MIN_LENGTH = 15
 
     FAQS = [
+      { patterns: [/\Amenu\z/, /\bopcoes\b/, /\bmenu principal\b/], action: :show_menu },
       {
         patterns: [/outra pessoa/, /\bcontato (ve|vai ver|consegue ver)/, /(pessoa|ele|ela) (vai )?(ve|ver|ler|le)\b/, /aparece (pra|para) (pessoa|ele|ela|o contato)/],
         answer: "Depende de como você usa:\n\n" \
@@ -24,7 +26,7 @@ module Reply
       },
       {
         patterns: [/cancel/],
-        answer: "Para cancelar, abra o menu e toque em *💳 Plano e Faturamento* → *Cancelar Assinatura*. " \
+        answer: "Para cancelar, digite *menu* e toque em *📊 Meu plano e uso* → *Cancelar Assinatura*. " \
                 "Você também pode cancelar o Pix Automático direto no app do seu banco."
       },
       { patterns: [/quanto custa/, /\bpreco/, /\bvalor/, /\bplanos?\b/, /\bassinar\b/, /\bassinatura\b/], action: :show_plans },
@@ -45,8 +47,10 @@ module Reply
       if faq
         reset_unrecognized_count
         faq[:answer] ? answer_faq(faq[:answer]) : send(faq[:action])
-      elsif !welcomed? || text.length < QUESTION_MIN_LENGTH
-        reply_unrecognized { show_menu }
+      elsif !welcomed?
+        reply_unrecognized { start_onboarding }
+      elsif text.length < QUESTION_MIN_LENGTH
+        reply_unrecognized { send_message(message: "Eu transcrevo áudios 🙂 Me encaminha um! Se precisar de algo, digite *menu*.") }
       else
         reply_unrecognized { forward_question_to_team(message) }
       end
@@ -54,8 +58,6 @@ module Reply
 
     def answer_faq(answer)
       send_message(message: answer)
-      sleep 0.5.seconds
-      show_menu
     end
 
     def forward_question_to_team(message)
@@ -102,12 +104,10 @@ module Reply
       until_at.present? && until_at > Time.current
     end
 
-    def welcomed?
-      @user.onboarding_completed? || @current_conversation_state["welcomed_at"].present?
-    end
-
+    # Sem o código de origem do site ("[home-planos-pro]"), que não é parte da
+    # pergunta e casaria com as palavras-chave do FAQ.
     def normalize_free_text(message)
-      I18n.transliterate(message.to_s).downcase.squish
+      I18n.transliterate(message.to_s.gsub(User::ACQUISITION_CODE, "")).downcase.squish
     end
   end
 end

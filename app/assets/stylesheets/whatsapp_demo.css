@@ -585,7 +585,7 @@
 }
 .wa-reply-heading { margin-bottom: 8px; }
 .wa-reply-text { white-space: normal; }
-.wa-reply-footer { margin-top: 8px; color: #3B4A54; }
+.wa-reply-footer { margin-top: 2px; color: #3B4A54; }
 .wa-reply-footer em { color: var(--wa-text); }
 .wa-word { animation: wa-word 0.35s ease both; }
 @keyframes wa-word {

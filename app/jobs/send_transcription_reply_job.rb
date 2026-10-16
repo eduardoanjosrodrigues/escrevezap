@@ -32,6 +32,9 @@ class SendTranscriptionReplyJob < ApplicationJob
     end
 
     Rails.logger.info "[SendTranscriptionReplyJob] Transcription #{transcription.id} entregue (#{chunks.size} mensagens)"
+
+    # Dica, aviso de saldo ou oferta, depois da transcrição (nunca antes dela).
+    TranscriptionFollowUpJob.set(wait: 2.seconds).perform_later(transcription.id)
   rescue => e
     if Meta::Service.pair_rate_limited?(e)
       retry_after_rate_limit(transcription, e, sent:, next_chunk:, attempt:, total: chunks.size)

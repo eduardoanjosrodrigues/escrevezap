@@ -107,7 +107,7 @@ module SeoHelper
       "brand"           => { "@type" => "Brand", "name" => SITE_NAME },
       "offers"          => [
         { "@type" => "Offer", "name" => "Gratuito", "price" => "0",     "priceCurrency" => "BRL" },
-        { "@type" => "Offer", "name" => "Basic",    "price" => "5.99",  "priceCurrency" => "BRL" },
+        { "@type" => "Offer", "name" => "Basic",    "price" => "4.99",  "priceCurrency" => "BRL" },
         { "@type" => "Offer", "name" => "Pro",      "price" => "19.90", "priceCurrency" => "BRL" }
       ]
     )

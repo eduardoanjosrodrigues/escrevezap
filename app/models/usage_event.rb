@@ -8,6 +8,8 @@ class UsageEvent < ApplicationRecord
   LONG_AUDIO_CONFIRMATION_REQUESTED  = "long_audio_confirmation_requested"
   LONG_AUDIO_CONFIRMED               = "long_audio_confirmed"
   LONG_AUDIO_CANCELLED               = "long_audio_cancelled"
+  FIRST_CONTACT                      = "first_contact"
+  FOLLOW_UP_SENT                     = "follow_up_sent"
 
   scope :this_month, -> { where(occurred_at: Time.current.beginning_of_month..) }
   scope :last_30_days, -> { where(occurred_at: 30.days.ago..) }

@@ -41,6 +41,12 @@
             Clientes
           <% end %>
 
+          <%= link_to admin_acquisition_path,
+                class: "flex items-center gap-2.5 px-3 py-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors #{request.path.start_with?(admin_acquisition_path) ? 'bg-white/10 text-white font-semibold' : ''}" do %>
+            <i class="ph ph-funnel text-base"></i>
+            Aquisição
+          <% end %>
+
           <%= link_to admin_transcriptions_path,
                 class: "flex items-center gap-2.5 px-3 py-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors #{request.path.start_with?(admin_transcriptions_path) ? 'bg-white/10 text-white font-semibold' : ''}" do %>
             <i class="ph ph-microphone text-base"></i>

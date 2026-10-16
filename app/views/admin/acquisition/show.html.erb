@@ -1,0 +1,91 @@
+<% content_for :page_title, "Aquisição" %>
+
+<div class="space-y-5">
+
+  <%# ── Período ── %>
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <p class="text-sm text-(--color-text-muted)">
+      Funil a partir do primeiro contato com o bot. Visitas e cliques no site ficam no Umami (eventos <span class="font-mono">cta-whatsapp</span>).
+    </p>
+    <div class="inline-flex rounded-lg border border-(--color-border) overflow-hidden text-sm">
+      <% [["7", "7 dias"], ["30", "30 dias"], ["90", "90 dias"], ["all", "Tudo"]].each do |value, label| %>
+        <%= link_to label, admin_acquisition_path(period: value),
+              class: "px-3 py-1.5 transition-colors #{@period == value ? 'bg-(--color-brand) text-white' : 'bg-(--color-surface) text-(--color-text-muted) hover:bg-(--color-surface-muted)'}" %>
+      <% end %>
+    </div>
+  </div>
+
+  <%# ── Funil total ── %>
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <% [[:contacts, "Primeiro contato", "mandaram mensagem ou áudio ao bot"],
+        [:transcribed, "Transcreveram", "pelo menos 1 transcrição concluída"],
+        [:returned, "Voltaram", "transcreveram em 2+ dias diferentes"],
+        [:paid, "Assinaram", "plano Basic ou Pro hoje"]].each do |step, label, hint| %>
+      <div class="bg-(--color-surface) border border-(--color-border) rounded-xl px-5 py-4">
+        <p class="text-xs font-medium text-(--color-text-muted) uppercase tracking-wide"><%= label %></p>
+        <p class="mt-1 text-2xl font-bold text-(--color-text) tabular-nums">
+          <%= @total[step] %>
+          <% if step != :contacts && @total[:contacts].positive? %>
+            <span class="text-sm font-medium text-(--color-text-muted)"><%= number_to_percentage(@total[step] * 100.0 / @total[:contacts], precision: 0) %></span>
+          <% end %>
+        </p>
+        <p class="text-xs text-(--color-text-muted) mt-0.5"><%= hint %></p>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+    <%= render "funnel_table", title: "Por página", rows: @by_page,
+          hint: "home, precos, seo-*, blog, ferramenta… e direto (sem código: contato compartilhado ou áudio direto)" %>
+    <%= render "funnel_table", title: "Por canal", rows: @by_channel,
+          hint: "utm_campaign/utm_source da primeira visita, ou buscador/rede social de onde veio; — = acesso direto" %>
+  </div>
+
+  <%= render "funnel_table", title: "Por botão", rows: @by_ref,
+        hint: "Código exato do botão clicado (ex. home-hero, home-video, sticky, seo-advogado-topo)" %>
+
+  <%# ── Últimos contatos ── %>
+  <div class="bg-(--color-surface) border border-(--color-border) rounded-xl overflow-hidden">
+    <div class="px-5 py-4 border-b border-(--color-border)">
+      <h2 class="text-sm font-semibold text-(--color-text)">Últimos contatos</h2>
+    </div>
+    <% if @recent.any? %>
+      <table class="w-full text-sm">
+        <thead class="bg-(--color-surface-muted) border-b border-(--color-border)">
+          <tr>
+            <th class="px-5 py-3 text-left text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Quando</th>
+            <th class="px-5 py-3 text-left text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Cliente</th>
+            <th class="px-5 py-3 text-left text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Botão</th>
+            <th class="px-5 py-3 text-left text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Canal</th>
+            <th class="px-5 py-3 text-left text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-(--color-border)">
+          <% @recent.each do |r| %>
+            <tr class="hover:bg-(--color-surface-muted)">
+              <td class="px-5 py-2.5 text-(--color-text-muted) whitespace-nowrap"><%= r[:created_at].strftime("%d/%m %H:%M") %></td>
+              <td class="px-5 py-2.5"><%= link_to r[:name], admin_user_path(r[:id]), class: "text-(--color-brand) hover:underline" %></td>
+              <td class="px-5 py-2.5 font-mono text-xs"><%= r[:ref] %></td>
+              <td class="px-5 py-2.5 font-mono text-xs"><%= r[:channel] %></td>
+              <td class="px-5 py-2.5 text-xs">
+                <% if r[:paid] %>
+                  <span class="px-2 py-0.5 rounded-full bg-(--color-brand) text-white font-semibold"><%= r[:plan].capitalize %></span>
+                <% elsif r[:returned] %>
+                  <span class="px-2 py-0.5 rounded-full bg-(--color-brand-light) text-(--color-brand) font-semibold">Voltou</span>
+                <% elsif r[:transcribed] %>
+                  <span class="px-2 py-0.5 rounded-full bg-(--color-accent-light) text-(--color-text)">Transcreveu</span>
+                <% else %>
+                  <span class="text-(--color-text-muted)">Só contato</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p class="px-5 py-8 text-sm text-center text-(--color-text-muted)">Nenhum contato rastreado neste período.</p>
+    <% end %>
+  </div>
+
+  <p class="text-xs text-(--color-text-muted)"><%= @untracked %> usuários são anteriores ao rastreio e não aparecem aqui.</p>
+</div>

@@ -98,6 +98,7 @@ Rails.application.routes.draw do
     end
     resources :transcriptions,       only: [ :index, :show ]
     resources :transcription_errors, only: [ :index ]
+    resource  :acquisition,          only: [ :show ], controller: :acquisition
     resources :waha_sessions,        only: [ :edit, :update ]
   end
 

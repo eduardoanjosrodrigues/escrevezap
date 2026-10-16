@@ -11,7 +11,7 @@ module HomeContent
     },
     {
       question: "O que é o Transcrever no chat?",
-      answer:   "É o recurso Pro em que você conecta seu WhatsApp ao EscreveZap como um dispositivo vinculado e reage com qualquer emoji a um áudio. A transcrição aparece como resposta na própria conversa, sem precisar encaminhar. Todos os planos podem testar até 20 vezes por mês."
+      answer:   "É o recurso Pro em que você conecta seu WhatsApp ao EscreveZap como um dispositivo vinculado e reage com qualquer emoji a um áudio. A transcrição aparece como resposta na própria conversa, sem precisar encaminhar. Dá para testar antes de assinar: no Grátis com seus 5 áudios e no Basic até 20 vezes por mês."
     },
     {
       question: "No Transcrever no chat, a outra pessoa vê a transcrição?",
@@ -35,7 +35,7 @@ module HomeContent
     },
     {
       question: "Quanto custa para transcrever áudios do WhatsApp?",
-      answer:   "Você pode começar de graça com 20 transcrições por mês. O plano Basic custa R$ 5,99/mês com 500 transcrições e o plano Pro custa R$ 19,90/mês com 2.000 transcrições, Transcrever no chat e resumo com IA."
+      answer:   "Você pode testar de graça com 5 áudios, sem cadastro. O plano Basic custa R$ 4,99/mês com 100 transcrições por mês e o plano Pro custa R$ 19,90/mês com 2.000 transcrições, Transcrever no chat e resumo com IA."
     },
     {
       question: "Posso cancelar quando quiser?",

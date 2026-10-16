@@ -7,7 +7,7 @@ module Reply
     # quando a pessoa confirma que já está na tela certa (pairing_ready).
     def show_connection_instructions
       instructions = <<~MSG
-        ⚡ *Transcrever no chat* (recurso Pro, teste grátis até 20/mês)
+        ⚡ *Transcrever no chat* (recurso Pro, dá pra testar antes de assinar)
 
         Conecte seu WhatsApp e reaja a qualquer áudio com um emoji: a transcrição aparece como resposta na própria conversa.
 

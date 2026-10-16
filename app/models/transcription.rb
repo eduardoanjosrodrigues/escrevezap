@@ -55,6 +55,13 @@ class Transcription < ApplicationRecord
 
   BRANDING_FOOTER = "\n\n---\n_via EscreveZap_".freeze
 
+  # A marca só aparece onde outras pessoas veem a transcrição: no Transcrever no
+  # chat (resposta na conversa com o contato) do plano Grátis. No chat com o
+  # próprio bot ela não faz sentido, e os planos pagos não têm marca.
+  def branded?(user_override = user)
+    !direct? && user_override.present? && user_override.free?
+  end
+
   def reply_text(user_override = user)
     body = full_formatted.presence || transcript
     return if body.blank?
@@ -71,6 +78,6 @@ class Transcription < ApplicationRecord
       "📄 *Transcrição*\n\n#{body}"
     end
 
-    text + BRANDING_FOOTER
+    branded?(user_override) ? text + BRANDING_FOOTER : text
   end
 end

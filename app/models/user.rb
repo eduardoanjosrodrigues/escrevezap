@@ -23,10 +23,12 @@ class User < ApplicationRecord
     email.downcase! if email.present?
   end
 
-  TRANSCRIPTION_LIMITS = { "free" => 20, "basic" => 500, "pro" => 2_000 }.freeze
+  # Grátis: 5 transcrições na vida, contando todo o histórico (é um teste,
+  # não um plano para uso contínuo). Basic e Pro: por mês.
+  TRANSCRIPTION_LIMITS = { "free" => 5, "basic" => 100, "pro" => 2_000 }.freeze
 
-  # Transcrever por reação (WhatsApp conectado) é recurso Pro: os outros planos
-  # podem testar até este limite por mês e continuam encaminhando áudios ao bot.
+  # Transcrever por reação (WhatsApp conectado) é recurso Pro: o Basic pode
+  # testar até este limite por mês (no Grátis vale o limite total de 5).
   REACTION_TRIAL_LIMIT = 20
 
   # Duração máxima de um áudio por plano. Acima disso o Free é recusado; nos
@@ -37,6 +39,20 @@ class User < ApplicationRecord
   # Áudios aceitos por minuto, por usuário. Protege contra rajadas de
   # encaminhamentos (custo de STT + rate limit da Meta por destinatário).
   TRANSCRIPTIONS_PER_MINUTE = 10
+
+  # Os botões do site abrem o bot com um código no fim da mensagem, ex.
+  # "Oi! Quero testar o EscreveZap 🎙️ [home-hero~google]": o botão clicado e,
+  # quando o navegador sabe, o canal. Quem chega sem código (contato
+  # compartilhado, número digitado, áudio direto) fica como "direto".
+  ACQUISITION_CODE = /\[([a-z0-9-]{1,40})(?:~([a-z0-9-]{1,30}))?\]/
+  ACQUISITION_DIRECT = "direto"
+
+  def self.acquisition_from(first_message)
+    match = ACQUISITION_CODE.match(first_message.to_s.downcase)
+    return { acquisition_ref: ACQUISITION_DIRECT, acquisition_channel: nil } unless match
+
+    { acquisition_ref: match[1], acquisition_channel: match[2] }
+  end
 
   def self.from_google(auth)
     # Try to find by provider/uid first (returning user via Google)
@@ -73,11 +89,23 @@ class User < ApplicationRecord
   end
 
   def transcription_limit
-    TRANSCRIPTION_LIMITS.fetch(plan, 20)
+    TRANSCRIPTION_LIMITS.fetch(plan, TRANSCRIPTION_LIMITS["free"])
   end
 
-  def monthly_transcriptions_used(excluding: nil)
-    waha_session&.monthly_transcription_count(excluding: excluding) || 0
+  # O limite do Grátis é na vida (não renova); os pagos renovam todo mês.
+  def lifetime_quota?
+    free?
+  end
+
+  # Transcrições que contam para o limite do plano: todas (Grátis) ou do mês.
+  def transcriptions_used(excluding: nil)
+    return 0 if waha_session.nil?
+
+    if lifetime_quota?
+      waha_session.lifetime_transcription_count(excluding: excluding)
+    else
+      waha_session.monthly_transcription_count(excluding: excluding)
+    end
   end
 
   def max_audio_duration
@@ -87,11 +115,17 @@ class User < ApplicationRecord
   # credits: quanto a transcrição em questão vai consumir (1, ou mais para
   # áudios longos confirmados).
   def transcription_limit_reached?(excluding: nil, credits: 1)
-    monthly_transcriptions_used(excluding: excluding) + credits > transcription_limit
+    transcriptions_used(excluding: excluding) + credits > transcription_limit
+  end
+
+  # Para exibir: no Grátis o histórico pode passar do limite (quem usou 20
+  # antes da mudança para 5), então mostramos no máximo o limite.
+  def transcriptions_used_for_display
+    [ transcriptions_used, transcription_limit ].min
   end
 
   def transcription_credits_remaining(excluding: nil)
-    [ transcription_limit - monthly_transcriptions_used(excluding: excluding), 0 ].max
+    [ transcription_limit - transcriptions_used(excluding: excluding), 0 ].max
   end
 
   def reaction_limit_reached?(excluding: nil)

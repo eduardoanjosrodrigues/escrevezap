@@ -17,7 +17,7 @@ class Subscription < ApplicationRecord
     pro:   "pro"
   }, prefix: :sub
 
-  PRICES = { "basic" => 5.99, "pro" => 19.90 }.freeze
+  PRICES = { "basic" => 4.99, "pro" => 19.90 }.freeze
 
   # Dias de tolerância após o vencimento antes de expirar (o Inter permite
   # retentativas por até 7 dias - PERMITE_3R_7D).

@@ -35,7 +35,7 @@
 
       <%# CTAs %>
       <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-        <%= link_to official_whatsapp_url,
+        <%= link_to official_whatsapp_url("home-hero"),
               target: "_blank", rel: "noopener",
               class: "inline-flex items-center justify-center gap-2 bg-(--color-brand) hover:bg-(--color-brand-dark) text-white font-semibold px-6 py-3.5 rounded-xl transition-colors text-sm shadow-sm" do %>
           <i class="ph ph-whatsapp-logo text-lg"></i>
@@ -66,7 +66,7 @@
 <%# ============================================================== %>
 <%# TRUST BAR %>
 <%# ============================================================== %>
-<section class="bg-(--color-surface) border-y border-gray-100 py-8">
+<section data-track-section="confianca" class="bg-(--color-surface) border-y border-gray-100 py-8">
   <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
       <% [
@@ -90,7 +90,7 @@
 <%# ============================================================== %>
 <%# HOW IT WORKS %>
 <%# ============================================================== %>
-<section id="como-funciona" class="py-20 md:py-28">
+<section data-track-section="como-funciona" id="como-funciona" class="py-20 md:py-28">
   <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
     <div class="text-center mb-14">
@@ -140,7 +140,7 @@
     <%# (decorative, handled by grid gap + natural reading flow) %>
 
     <%# Premium: transcribe inside the conversation by reacting %>
-    <div class="mt-14 rounded-2xl border-2 border-(--color-brand) bg-(--color-surface) p-6 md:p-10 grid grid-cols-1 md:grid-cols-2 items-center gap-10">
+    <div data-track-section="pro-demo" class="mt-14 rounded-2xl border-2 border-(--color-brand) bg-(--color-surface) p-6 md:p-10 grid grid-cols-1 md:grid-cols-2 items-center gap-10">
       <div>
         <div class="w-12 h-12 rounded-xl bg-(--color-brand) text-white flex items-center justify-center mb-5">
           <i class="ph ph-lightning text-2xl"></i>
@@ -151,7 +151,7 @@
         </div>
         <p class="text-base text-(--color-text-muted) leading-relaxed">
           Conecte seu WhatsApp e reaja a qualquer áudio com um emoji (👍, ❤️, 😂). A transcrição aparece respondendo o áudio na própria conversa, sem precisar encaminhar.
-          Teste grátis até 20 vezes por mês em qualquer plano.
+          Dá pra testar antes de assinar: no Grátis com seus 5 áudios, no Basic até 20 vezes por mês.
         </p>
       </div>
       <div class="flex justify-center">
@@ -160,7 +160,7 @@
     </div>
 
     <div class="mt-12 text-center">
-      <%= link_to official_whatsapp_url,
+      <%= link_to official_whatsapp_url("home-como"),
             target: "_blank", rel: "noopener",
             class: "inline-flex items-center gap-2 bg-(--color-brand) hover:bg-(--color-brand-dark) text-white font-semibold px-6 py-3.5 rounded-xl transition-colors text-sm" do %>
         <i class="ph ph-whatsapp-logo text-lg"></i>
@@ -174,7 +174,7 @@
 <%# ============================================================== %>
 <%# USE CASES — "Quando usar o EscreveZap" %>
 <%# ============================================================== %>
-<section id="quando-usar" class="bg-(--color-brand-subtle) py-20 md:py-28" aria-labelledby="use-cases-title">
+<section data-track-section="quando-usar" id="quando-usar" class="bg-(--color-brand-subtle) py-20 md:py-28" aria-labelledby="use-cases-title">
   <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
     <div class="text-center mb-12">
@@ -203,7 +203,7 @@
 <%# ============================================================== %>
 <%# WOW — BEFORE / AFTER — Basic vs Pro %>
 <%# ============================================================== %>
-<section class="py-20 md:py-28 bg-(--color-surface)">
+<section data-track-section="resumo-ia" class="py-20 md:py-28 bg-(--color-surface)">
   <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
     <div class="text-center mb-12">
@@ -296,7 +296,7 @@
 <%# ============================================================== %>
 <%# TRY THE ENGINE — Live audio transcription demo %>
 <%# ============================================================== %>
-<section id="testar" class="py-20 md:py-28 bg-(--color-brand-subtle)">
+<section data-track-section="testar" id="testar" class="py-20 md:py-28 bg-(--color-brand-subtle)">
   <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
 
     <div class="text-center mb-10">
@@ -402,7 +402,7 @@
 
           <div class="mt-5 text-center">
             <p class="text-sm text-(--color-text-muted) mb-3">Gostou do resultado?</p>
-            <%= link_to official_whatsapp_url,
+            <%= link_to official_whatsapp_url("home-teste"),
                   target: "_blank", rel: "noopener",
                   class: "inline-flex items-center gap-2 bg-(--color-brand) hover:bg-(--color-brand-dark) text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm shadow-sm" do %>
               <i class="ph ph-whatsapp-logo text-lg"></i>
@@ -426,7 +426,7 @@
 <%# ============================================================== %>
 <%# FEATURES %>
 <%# ============================================================== %>
-<section class="py-20 md:py-28 bg-(--color-bg)">
+<section data-track-section="recursos" class="py-20 md:py-28 bg-(--color-bg)">
   <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
     <div class="text-center mb-12">
@@ -466,7 +466,7 @@
 <%# ============================================================== %>
 <%# PRICING %>
 <%# ============================================================== %>
-<section id="precos" class="py-20 md:py-28 bg-(--color-surface)">
+<section data-track-section="precos" id="precos" class="py-20 md:py-28 bg-(--color-surface)">
   <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
     <div class="text-center mb-14">
@@ -482,15 +482,14 @@
           <p class="text-sm font-semibold text-(--color-text-muted) uppercase tracking-wide mb-3">Gratuito</p>
           <div class="flex items-end gap-1 mb-1">
             <span class="text-4xl font-extrabold text-(--color-text)">R$0</span>
-            <span class="text-(--color-text-muted) text-sm mb-1.5">/mês</span>
           </div>
-          <p class="text-sm text-(--color-text-muted)">20 transcrições por mês</p>
+          <p class="text-sm text-(--color-text-muted)">5 áudios para testar</p>
         </div>
         <ul class="space-y-3 flex-1 mb-8">
           <% [
             "Encaminhe áudios e receba o texto",
             "Resposta em segundos no WhatsApp",
-            "Teste o Transcrever no chat (20/mês)"
+            "Sem cadastro e sem cartão"
           ].each do |item| %>
             <li class="flex items-center gap-2.5 text-sm text-(--color-text)">
               <i class="ph ph-check text-(--color-brand) shrink-0"></i>
@@ -502,7 +501,7 @@
             Resumo com IA
           </li>
         </ul>
-        <%= link_to "Começar grátis", official_whatsapp_url,
+        <%= link_to "Começar grátis", official_whatsapp_url("home-planos-gratis"),
               target: "_blank", rel: "noopener",
               class: "block w-full text-center bg-(--color-brand-subtle) hover:bg-(--color-brand-light) text-(--color-brand) font-semibold py-3 rounded-xl text-sm transition-colors" %>
       </div>
@@ -512,10 +511,10 @@
         <div class="mb-6">
           <p class="text-sm font-semibold text-(--color-text-muted) uppercase tracking-wide mb-3">Basic</p>
           <div class="flex items-end gap-1 mb-1">
-            <span class="text-4xl font-extrabold text-(--color-text)">R$5,99</span>
+            <span class="text-4xl font-extrabold text-(--color-text)">R$4,99</span>
             <span class="text-(--color-text-muted) text-sm mb-1.5">/mês</span>
           </div>
-          <p class="text-sm text-(--color-text-muted)">500 transcrições por mês</p>
+          <p class="text-sm text-(--color-text-muted)">100 transcrições por mês</p>
         </div>
         <ul class="space-y-3 flex-1 mb-8">
           <% [
@@ -534,7 +533,7 @@
             Resumo com IA
           </li>
         </ul>
-        <%= link_to "Assinar Basic", official_whatsapp_url,
+        <%= link_to "Assinar Basic", official_whatsapp_url("home-planos-basic"),
               target: "_blank", rel: "noopener",
               class: "block w-full text-center bg-(--color-brand-subtle) hover:bg-(--color-brand-light) text-(--color-brand) font-semibold py-3 rounded-xl text-sm transition-colors" %>
       </div>
@@ -568,7 +567,7 @@
             </li>
           <% end %>
         </ul>
-        <%= link_to "Experimentar Pro", official_whatsapp_url,
+        <%= link_to "Experimentar Pro", official_whatsapp_url("home-planos-pro"),
               target: "_blank", rel: "noopener",
               class: "block w-full text-center bg-white hover:bg-(--color-brand-light) text-(--color-brand) font-bold py-3 rounded-xl text-sm transition-colors" %>
       </div>
@@ -582,7 +581,7 @@
 <%# ============================================================== %>
 <%# AI SEO / GEO — Plain-language Q&A for LLM discoverability %>
 <%# ============================================================== %>
-<section id="explicacao" class="py-20 md:py-28 bg-(--color-surface)" aria-labelledby="explicacao-title">
+<section data-track-section="explicacao" id="explicacao" class="py-20 md:py-28 bg-(--color-surface)" aria-labelledby="explicacao-title">
   <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
 
     <div class="text-center mb-12">
@@ -640,7 +639,7 @@
 <%# ============================================================== %>
 <%# COMPARISON — EscreveZap vs WhatsApp tradicional %>
 <%# ============================================================== %>
-<section id="comparacao" class="py-20 md:py-28 bg-(--color-bg)" aria-labelledby="comparacao-title">
+<section data-track-section="comparacao" id="comparacao" class="py-20 md:py-28 bg-(--color-bg)" aria-labelledby="comparacao-title">
   <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
     <div class="text-center mb-12">
@@ -694,7 +693,7 @@
 <%# ============================================================== %>
 <%# FAQ %>
 <%# ============================================================== %>
-<section id="faq" class="py-20 md:py-28 bg-(--color-bg)" aria-labelledby="faq-title">
+<section data-track-section="faq" id="faq" class="py-20 md:py-28 bg-(--color-bg)" aria-labelledby="faq-title">
   <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
 
     <div class="text-center mb-12">
@@ -721,7 +720,7 @@
 <%# ============================================================== %>
 <%# FINAL CTA %>
 <%# ============================================================== %>
-<section class="bg-(--color-brand) py-20 md:py-28">
+<section data-track-section="cta-final" class="bg-(--color-brand) py-20 md:py-28">
   <div class="max-w-2xl mx-auto px-4 sm:px-6 text-center">
     <h2 class="text-3xl md:text-4xl font-extrabold text-white leading-tight tracking-tight">
       Pare de esperar<br>para ouvir depois.
@@ -730,7 +729,7 @@
       Leia seus áudios quando ouvir não for uma opção.
     </p>
     <div class="mt-10">
-      <%= link_to official_whatsapp_url,
+      <%= link_to official_whatsapp_url("home-final"),
             target: "_blank", rel: "noopener",
             class: "inline-flex items-center gap-2 bg-white hover:bg-(--color-brand-light) text-(--color-brand) font-bold px-8 py-4 rounded-xl transition-colors text-base shadow-lg" do %>
         <i class="ph ph-whatsapp-logo text-xl"></i>

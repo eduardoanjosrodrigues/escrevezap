@@ -23,7 +23,8 @@ class ExternalEvents::WhatsappProcessor < ExternalEvents::Base
 
       Reply::Base.new(
         from: payload[:from],
-        display_name: payload[:display_name]
+        display_name: payload[:display_name],
+        message: payload[:body]
       ).reply(
         message: payload[:body],
         interactive_reply: payload[:interactive_reply],

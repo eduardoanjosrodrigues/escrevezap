@@ -14,8 +14,14 @@ module TranscriptionChannels
       true
     end
 
+    # Lido + "digitando…" enquanto a transcrição é feita. Não é essencial:
+    # uma falha aqui não pode impedir a transcrição.
     def mark_read
-      # No read-receipt call needed for this flow.
+      return if @transcription.waha_message_id.blank?
+
+      meta_service.mark_read_with_typing(@transcription.waha_message_id)
+    rescue => e
+      Rails.logger.warn "[MetaDirectChannel] Falha ao marcar como lida/digitando: #{e.message}"
     end
 
     def send_placeholder(_text)

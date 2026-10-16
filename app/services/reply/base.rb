@@ -7,13 +7,14 @@ module Reply
     include Reply::FreeText
     include Reply::LongAudio
 
-    def initialize(from:, display_name: nil)
+    def initialize(from:, display_name: nil, message: nil)
       @display_name = display_name
       @from = from # e.g. "5585999999999@c.us"
       @phone = from.split("@").first
 
-      # Check if the user already exists in the database
-      @session = WahaSession.find_or_create_for_phone!(phone: @phone, display_name: display_name)
+      # Check if the user already exists in the database. The message only
+      # matters on first contact: it carries the site's acquisition code.
+      @session = WahaSession.find_or_create_for_phone!(phone: @phone, display_name: display_name, first_message: message.to_s)
       @user    = @session.user
 
       @current_conversation_state = @user.conversation_state || {}

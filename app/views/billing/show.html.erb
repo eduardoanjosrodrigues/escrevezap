@@ -2,7 +2,7 @@
 
 <%
   sub   = @subscription
-  used  = current_user.monthly_transcriptions_used
+  used  = current_user.transcriptions_used_for_display
   limit = current_user.transcription_limit
   pct   = [(used.to_f / limit * 100).round, 100].min
 
@@ -21,8 +21,8 @@
   end
 
   plans = {
-    "free"  => { label: "Grátis", price: "R$0",     limit: 20,    highlights: ["Integração com WhatsApp", "Transcreva reagindo com emojis"], icon: "ph-gift",      tone: "muted" },
-    "basic" => { label: "Basic",  price: "R$5,99",  limit: 500,   highlights: ["Sem assinatura visual", "Ideal para rotina diária"],    icon: "ph-lightning", tone: "brand" },
+    "free"  => { label: "Grátis", price: "R$0",     limit: User::TRANSCRIPTION_LIMITS["free"],  highlights: ["Para testar o EscreveZap", "Encaminhe áudios para o bot"], icon: "ph-gift",      tone: "muted" },
+    "basic" => { label: "Basic",  price: "R$4,99",  limit: User::TRANSCRIPTION_LIMITS["basic"], highlights: ["Sem assinatura visual", "Ideal para rotina diária"],    icon: "ph-lightning", tone: "brand" },
     "pro"   => { label: "Pro",    price: "R$19,90", limit: 2_000, highlights: ["Resumo e formatação com IA", "Produtividade máxima"],    icon: "ph-star",      tone: "premium" },
   }
 
@@ -79,7 +79,7 @@
     <%# Usage gauge — visual de uso vs limite %>
     <div>
       <div class="flex items-baseline justify-between gap-2 mb-2">
-        <p class="text-xs text-(--color-text-muted)">Uso este mês</p>
+        <p class="text-xs text-(--color-text-muted)"><%= current_user.lifetime_quota? ? "Transcrições grátis usadas" : "Uso este mês" %></p>
         <p class="text-sm font-bold text-(--color-text)"><%= used %><span class="text-(--color-text-subtle) font-normal"> / <%= limit %></span></p>
       </div>
       <div class="w-full h-2 bg-(--color-surface-raised) rounded-full overflow-hidden">
@@ -88,7 +88,7 @@
       <% if pct >= 100 %>
         <p class="text-xs text-(--color-danger) font-medium mt-2">Limite atingido. Faça upgrade para continuar.</p>
       <% elsif pct >= 80 %>
-        <p class="text-xs text-(--color-warning) mt-2">Você já usou <%= pct %>% do seu limite mensal.</p>
+        <p class="text-xs text-(--color-warning) mt-2">Você já usou <%= pct %>% do seu limite.</p>
       <% end %>
     </div>
   </div>

@@ -16,8 +16,12 @@ module ApplicationHelper
     end
   end
 
-  def official_whatsapp_url
-    "https://wa.me/558296801867?text=Oi!%20Gostaria%20de%20conhecer%20os%20servi%C3%A7os"
+  # Abre o bot oficial. `ref` identifica o botão clicado (ex. "home-hero") e
+  # vai no fim da mensagem para o bot registrar de onde veio o contato
+  # (User.acquisition_from). O JS da landing acrescenta o canal (~google,
+  # ~instagram, utm) antes do clique.
+  def official_whatsapp_url(ref = "site")
+    "https://wa.me/558296801867?text=#{ERB::Util.url_encode("Oi! Quero testar o EscreveZap 🎙️ [#{ref}]")}"
   end
 
   # Assinaturas são feitas pelo bot (Pix Automático do Inter).

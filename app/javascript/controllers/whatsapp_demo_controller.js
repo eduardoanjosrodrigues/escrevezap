@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { track } from "../analytics"
 
 // Plays the landing-page WhatsApp demos on a loop. Two scenarios:
 //   forward  — long-press an audio, forward it to EscreveZap, read the reply
@@ -68,6 +69,10 @@ export default class extends Controller {
 
   play() {
     if (this.running || this.paused) return
+    if (!this.viewTracked) {
+      this.viewTracked = true
+      track("demo-view", { scenario: this.scenarioValue })
+    }
     this.running = true
     this.loop(++this.runId)
   }

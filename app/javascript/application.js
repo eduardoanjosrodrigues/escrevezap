@@ -1,4 +1,5 @@
 import "@hotwired/turbo-rails"
+import "./analytics"
 import { Application } from "@hotwired/stimulus"
 import AudioRecorderController from "./controllers/audio_recorder_controller"
 import ConnectController       from "./controllers/connect_controller"

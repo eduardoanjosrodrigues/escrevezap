@@ -76,12 +76,12 @@ class SeoController < ApplicationController
       2. Toque em Encaminhar e escolha o contato do EscreveZap (na primeira vez, mande um "oi" para ele).
       3. Em poucos segundos a transcrição chega na conversa com o EscreveZap. Só você vê.
 
-      Recurso Pro "Transcrever no chat": conecte o WhatsApp ao EscreveZap (Aparelhos conectados → Conectar com número de telefone) e reaja ao áudio com qualquer emoji. A transcrição é enviada como resposta ao áudio na própria conversa, então o contato também vê. Todos os planos podem testar até 20 vezes por mês.
+      Recurso Pro "Transcrever no chat": conecte o WhatsApp ao EscreveZap (Aparelhos conectados → Conectar com número de telefone) e reaja ao áudio com qualquer emoji. A transcrição é enviada como resposta ao áudio na própria conversa, então o contato também vê. Dá para testar antes de assinar (no Grátis com os 5 áudios, no Basic até 20 vezes por mês).
 
       ## Planos
 
-      - Grátis: R$ 0/mês, 20 transcrições por mês.
-      - Basic: R$ 5,99/mês, 500 transcrições por mês, sem a marca do EscreveZap nas respostas.
+      - Grátis: R$ 0, 5 áudios para testar (sem cadastro).
+      - Basic: R$ 4,99/mês, 100 transcrições por mês, sem a marca do EscreveZap nas respostas.
       - Pro: R$ 19,90/mês, 2.000 transcrições por mês, Transcrever no chat, formatação e resumo com IA.
 
       ## Páginas

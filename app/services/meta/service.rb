@@ -38,6 +38,17 @@ module Meta
       track_outgoing_message(message_type: :template, body: rendered_message.presence || "Template enviado", metadata: payload, response: response)
     end
 
+    # Marca a mensagem recebida como lida e mostra "digitando…" para o usuário
+    # até a nossa próxima mensagem (a Meta encerra sozinha após ~25 s).
+    def mark_read_with_typing(message_id)
+      @api_request.post("/messages", {
+        messaging_product: "whatsapp",
+        status: "read",
+        message_id: message_id,
+        typing_indicator: { type: "text" }
+      })
+    end
+
     def send_message(text)
       payload = {
         messaging_product: "whatsapp",

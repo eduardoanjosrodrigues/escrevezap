@@ -34,7 +34,7 @@
     </p>
 
     <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-      <%= link_to official_whatsapp_url,
+      <%= link_to official_whatsapp_url("#{@page[:ref]}-topo"),
             target: "_blank", rel: "noopener",
             class: "inline-flex items-center justify-center gap-2 bg-(--color-brand) hover:bg-(--color-brand-dark) text-white font-semibold px-6 py-3.5 rounded-xl transition-colors text-sm shadow-sm" do %>
         <i class="ph ph-whatsapp-logo text-lg"></i>
@@ -99,7 +99,7 @@
     </ol>
 
     <div class="text-center mt-10">
-      <%= link_to official_whatsapp_url,
+      <%= link_to official_whatsapp_url("#{@page[:ref]}-meio"),
             target: "_blank", rel: "noopener",
             class: "inline-flex items-center gap-2 bg-(--color-brand) hover:bg-(--color-brand-dark) text-white font-semibold px-6 py-3.5 rounded-xl transition-colors text-sm" do %>
         <i class="ph ph-whatsapp-logo text-lg"></i>
@@ -163,7 +163,7 @@
       Grátis para começar. Configure em menos de 2 minutos.
     </p>
     <div class="mt-8">
-      <%= link_to official_whatsapp_url,
+      <%= link_to official_whatsapp_url("#{@page[:ref]}-fim"),
             target: "_blank", rel: "noopener",
             class: "inline-flex items-center gap-2 bg-white hover:bg-(--color-brand-light) text-(--color-brand) font-bold px-8 py-4 rounded-xl transition-colors text-base shadow-lg" do %>
         <i class="ph ph-whatsapp-logo text-xl"></i>

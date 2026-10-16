@@ -104,7 +104,7 @@
       <p class="text-sm font-semibold text-(--color-text)">Assinatura</p>
       <p class="text-xs text-(--color-text-muted) mt-0.5">
         Plano <%= current_user.plan.capitalize %> ·
-        <%= current_user.monthly_transcriptions_used %> / <%= current_user.transcription_limit %> transcrições
+        <%= current_user.transcriptions_used_for_display %> / <%= current_user.transcription_limit %> transcrições
       </p>
     </div>
     <i class="ph ph-arrow-right text-(--color-text-subtle)"></i>

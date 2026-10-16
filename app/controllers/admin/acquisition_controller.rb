@@ -1,0 +1,54 @@
+module Admin
+  # Funil de aquisição a partir do primeiro contato com o bot: de qual botão do
+  # site (acquisition_ref) e canal (acquisition_channel) vieram os contatos, e
+  # quantos transcreveram, voltaram e assinaram. Visitas e cliques ficam no
+  # Umami; aqui começa no que o banco enxerga.
+  class AcquisitionController < Admin::BaseController
+    PERIODS = { "7" => 7.days, "30" => 30.days, "90" => 90.days }.freeze
+
+    def show
+      @period = PERIODS.key?(params[:period]) || params[:period] == "all" ? params[:period] : "30"
+
+      users = User.where.not(acquisition_ref: nil)
+      users = users.where(created_at: PERIODS[@period].ago..) unless @period == "all"
+      users = users.pluck(:id, :acquisition_ref, :acquisition_channel, :plan, :created_at, :name)
+
+      # transcrições concluídas e dias distintos com transcrição, por usuário
+      activity = UsageEvent.where(event_type: UsageEvent::TRANSCRIPTION_COMPLETED, user_id: users.map(&:first))
+                           .group(:user_id)
+                           .pluck(:user_id, Arel.sql("COUNT(*)"), Arel.sql("COUNT(DISTINCT DATE(occurred_at))"))
+                           .to_h { |id, count, days| [ id, { count: count, days: days } ] }
+
+      rows = users.map do |id, ref, channel, plan, created_at, name|
+        stats = activity[id] || { count: 0, days: 0 }
+        { id: id, ref: ref, channel: channel.presence || "—", plan: plan, created_at: created_at, name: name,
+          transcribed: stats[:count] > 0, returned: stats[:days] >= 2, paid: plan != "free" }
+      end
+
+      @total     = funnel(rows)
+      @by_ref    = rows.group_by { |r| r[:ref] }.transform_values { |rs| funnel(rs) }.sort_by { |_, f| -f[:contacts] }
+      @by_page   = rows.group_by { |r| page_of(r[:ref]) }.transform_values { |rs| funnel(rs) }.sort_by { |_, f| -f[:contacts] }
+      @by_channel = rows.group_by { |r| r[:channel] }.transform_values { |rs| funnel(rs) }.sort_by { |_, f| -f[:contacts] }
+      @recent    = rows.sort_by { |r| r[:created_at] }.last(25).reverse
+      @untracked = User.where(acquisition_ref: nil).count
+    end
+
+    private
+
+    def funnel(rows)
+      { contacts:    rows.size,
+        transcribed: rows.count { |r| r[:transcribed] },
+        returned:    rows.count { |r| r[:returned] },
+        paid:        rows.count { |r| r[:paid] } }
+    end
+
+    # "home-planos-pro" → "home", "seo-advogado-topo" → "seo-advogado"
+    def page_of(ref)
+      case ref
+      when /\Aseo-(.+)-(topo|meio|fim)\z/ then "seo-#{Regexp.last_match(1)}"
+      when /\A(home|precos)-/ then Regexp.last_match(1)
+      else ref
+      end
+    end
+  end
+end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_16_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_16_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -176,6 +176,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_000000) do
   end
 
   create_table "users", force: :cascade do |t|
+    t.string "acquisition_channel"
+    t.string "acquisition_ref"
     t.boolean "admin", default: false, null: false
     t.string "avatar_url"
     t.boolean "contacts_intro_dismissed", default: false, null: false
@@ -195,6 +197,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_000000) do
     t.integer "sign_in_count", default: 0, null: false
     t.string "uid"
     t.datetime "updated_at", null: false
+    t.index ["acquisition_ref"], name: "index_users_on_acquisition_ref"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["plan"], name: "index_users_on_plan"
     t.index ["provider", "uid"], name: "index_users_on_provider_uid", unique: true, where: "(provider IS NOT NULL)"

@@ -1,0 +1,38 @@
+<%# locals: title, rows ([[label, funnel]]), hint %>
+<div class="bg-(--color-surface) border border-(--color-border) rounded-xl overflow-hidden">
+  <div class="px-5 py-4 border-b border-(--color-border)">
+    <h2 class="text-sm font-semibold text-(--color-text)"><%= title %></h2>
+    <p class="text-xs text-(--color-text-muted) mt-0.5"><%= hint %></p>
+  </div>
+  <% if rows.any? %>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-(--color-surface-muted) border-b border-(--color-border)">
+          <tr>
+            <th class="px-5 py-3 text-left text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Origem</th>
+            <th class="px-5 py-3 text-right text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Contatos</th>
+            <th class="px-5 py-3 text-right text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Transcreveram</th>
+            <th class="px-5 py-3 text-right text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Voltaram</th>
+            <th class="px-5 py-3 text-right text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Assinaram</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-(--color-border)">
+          <% rows.each do |label, f| %>
+            <tr class="hover:bg-(--color-surface-muted)">
+              <td class="px-5 py-2.5 font-mono text-xs text-(--color-text)"><%= label %></td>
+              <td class="px-5 py-2.5 text-right font-semibold tabular-nums"><%= f[:contacts] %></td>
+              <% %i[transcribed returned paid].each do |step| %>
+                <td class="px-5 py-2.5 text-right tabular-nums">
+                  <%= f[step] %>
+                  <span class="ml-1 text-xs text-(--color-text-muted)"><%= f[:contacts].positive? ? number_to_percentage(f[step] * 100.0 / f[:contacts], precision: 0) : "—" %></span>
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="px-5 py-8 text-sm text-center text-(--color-text-muted)">Nenhum contato rastreado neste período.</p>
+  <% end %>
+</div>

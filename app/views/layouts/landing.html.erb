@@ -32,7 +32,7 @@
 
 
     <%# ── Umami Analytics ───────────────────────────────────────────── %>
-    <script defer src="https://cloud.umami.is/script.js" data-website-id="32378504-b708-46f3-8ec2-df6b5c0fe9aa"></script>
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="32378504-b708-46f3-8ec2-df6b5c0fe9aa" data-domains="escrevezap.com.br,www.escrevezap.com.br"></script>
     <meta name="facebook-domain-verification" content="14vbksr6bctt0sjokt35k6aurw4ndn" />
 
     <%# ── Structured data (JSON-LD) ─────────────────────────────────── %>
@@ -61,7 +61,7 @@
         <%= link_to "Entrar", authenticated_root_path,
               class: "flex items-center justify-center gap-2 w-full bg-(--color-brand) hover:bg-(--color-brand-dark) text-white font-semibold py-3.5 rounded-xl text-sm transition-colors" %>
       <% else %>
-        <%= link_to official_whatsapp_url,
+        <%= link_to official_whatsapp_url("sticky"),
               target: "_blank", rel: "noopener",
               class: "flex items-center justify-center gap-2 w-full bg-(--color-brand) hover:bg-(--color-brand-dark) text-white font-semibold py-3.5 rounded-xl text-sm transition-colors" do %>
           <i class="ph ph-whatsapp-logo text-lg"></i>
@@ -105,7 +105,7 @@
             <% else %>
               <%= link_to "Entrar", new_user_session_path,
                     class: "hidden md:inline-flex text-sm text-(--color-text-muted) hover:text-(--color-text) font-semibold px-3 py-2 transition-colors mr-1" %>
-              <%= link_to official_whatsapp_url,
+              <%= link_to official_whatsapp_url("nav"),
                     target: "_blank", rel: "noopener",
                     class: "hidden md:inline-flex items-center gap-1.5 bg-(--color-brand) hover:bg-(--color-brand-dark) text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition-colors" do %>
                 <i class="ph ph-whatsapp-logo"></i>
@@ -134,7 +134,7 @@
               <%= link_to "Entrar", authenticated_root_path,
                     class: "flex items-center justify-center gap-2 w-full bg-(--color-brand) text-white font-semibold py-3 rounded-xl text-sm" %>
             <% else %>
-              <%= link_to official_whatsapp_url,
+              <%= link_to official_whatsapp_url("menu"),
                     target: "_blank", rel: "noopener",
                     class: "flex items-center justify-center gap-2 w-full bg-(--color-brand) text-white font-semibold py-3 rounded-xl text-sm" do %>
                 <i class="ph ph-whatsapp-logo text-lg"></i>
@@ -246,20 +246,7 @@
         });
       })();
     </script>
-    <script>
-      // Eventos de conversão no Umami: qualquer clique que leva ao WhatsApp
-      // oficial ou ao login, com a página de origem e o texto do botão.
-      document.addEventListener('click', function(e) {
-        var a = e.target.closest && e.target.closest('a[href]');
-        if (!a || !window.umami) return;
-        var href = a.getAttribute('href');
-        var name = href.indexOf('wa.me/') !== -1 ? 'cta-whatsapp'
-                 : href.indexOf('/app/entrar') === 0 ? 'cta-entrar'
-                 : null;
-        if (!name) return;
-        window.umami.track(name, { page: location.pathname, label: a.textContent.trim().slice(0, 40) });
-      });
-    </script>
+    <%# Eventos do Umami (cliques, rolagem, seções, FAQ) ficam em app/javascript/analytics.js %>
     <%= render "shared/notyf" %>
   </body>
 </html>

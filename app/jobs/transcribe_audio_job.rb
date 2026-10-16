@@ -185,11 +185,11 @@ class TranscribeAudioJob < ApplicationJob
       return
     end
 
-    # Guard: monthly limit
+    # Guard: limite do plano (Grátis: na vida; pagos: no mês)
     if user.transcription_limit_reached?(excluding: transcription, credits: transcription.credits)
-      Rails.logger.info "[TranscribeAudioJob] Limite mensal atingido para user #{user.id} — skipping"
+      Rails.logger.info "[TranscribeAudioJob] Limite do plano atingido para user #{user.id} — skipping"
       send_limit_reached_notice(transcription, channel, user)
-      fail_transcription!(transcription, "Limite mensal de transcrições atingido")
+      fail_transcription!(transcription, "Limite de transcrições do plano atingido")
       return
     end
 
@@ -511,11 +511,7 @@ class TranscribeAudioJob < ApplicationJob
   end
 
   def send_limit_reached_notice(transcription, channel, user)
-    # Mensagem no WhatsApp (sem link)
-    text = "⚠️ *Seu limite de transcrições do EscreveZap foi atingido este mês.*\n\n" \
-           "Você usou todas as #{user.transcription_limit} transcrições do plano #{user.plan.capitalize}.\n\n" \
-           "Para continuar recebendo transcrições, atualize seu plano.\n\n" \
-           "_via EscreveZap_"
+    text, buttons = Reply::PlanMessages.quota_exhausted(user)
 
     # No canal conectado o aviso iria para a conversa com o contato, então vai
     # pelo bot (quem não é usuário de WhatsApp já recebe o email abaixo); no
@@ -524,7 +520,7 @@ class TranscribeAudioJob < ApplicationJob
       user.notify(subject: "Limite de transcrições atingido", text: text) if user.provider == "phone"
     else
       begin
-        channel.send_text(text)
+        buttons.any? ? channel.send_buttons(text, buttons) : channel.send_text(text)
       rescue => e
         Rails.logger.warn "[TranscribeAudioJob] Failed to send limit notice via WA: #{e.message}"
         Sentry.capture_exception(e)
@@ -583,7 +579,7 @@ class TranscribeAudioJob < ApplicationJob
       "⏱️ *Esse áudio tem #{minutes} min.*\n\n" \
       "No plano Grátis eu transcrevo áudios de até #{max_minutes} min. " \
       "Nos planos Basic e Pro o limite é de 25 min — e áudios maiores podem ser transcritos usando créditos extras.\n\n" \
-      "Para assinar, toque em *💳 Plano e Faturamento* no menu."
+      "Para assinar, digite *menu* e toque em *📊 Meu plano e uso*."
     else
       "⏱️ *Esse áudio tem #{minutes} min.*\n\n" \
       "Direto nas conversas eu transcrevo áudios de até #{max_minutes} min. " \
@@ -642,7 +638,7 @@ class TranscribeAudioJob < ApplicationJob
     text = "⚡ *Você usou as #{User::REACTION_TRIAL_LIMIT} transcrições por reação deste mês.*\n\n" \
            "Transcrever direto nas conversas é um recurso do plano *Pro*. " \
            "Enquanto isso, é só *encaminhar o áudio para mim* que eu transcrevo aqui.\n\n" \
-           "Para assinar o Pro, toque em *💳 Plano e Faturamento* no menu."
+           "Para assinar o Pro, digite *menu* e toque em *📊 Meu plano e uso*."
 
     user.notify(subject: "Limite de transcrições por reação atingido", text: text)
   end

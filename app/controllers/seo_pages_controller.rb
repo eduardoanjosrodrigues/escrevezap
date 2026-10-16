@@ -6,6 +6,7 @@ class SeoPagesController < ApplicationController
   # and a route in `config/routes.rb`. The shared template handles render.
   PAGES = {
     "converter-audio-em-texto" => {
+      ref:         "seo-converter", # código de origem nos botões de WhatsApp
       keyword:     "converter áudio em texto",
       title:       "Converter Áudio em Texto pelo WhatsApp | EscreveZap",
       description: "Converta áudio em texto com IA sem sair do WhatsApp: encaminhe a mensagem de voz para o EscreveZap e receba o texto pontuado em segundos. Comece grátis.",
@@ -34,12 +35,13 @@ class SeoPagesController < ApplicationController
         },
         {
           question: "Preciso criar conta?",
-          answer:   "Não. Na primeira vez, mande um \"oi\" para o EscreveZap e já pode encaminhar seus áudios. O plano grátis inclui 20 transcrições por mês."
+          answer:   "Não. Na primeira vez, mande um \"oi\" para o EscreveZap e já pode encaminhar seus áudios. O plano grátis inclui 5 áudios para testar."
         }
       ]
     },
 
     "responder-audio-whatsapp" => {
+      ref:         "seo-responder", # código de origem nos botões de WhatsApp
       keyword:     "responder áudio do WhatsApp",
       title:       "Responder Áudio do WhatsApp Sem Ouvir | EscreveZap",
       description: "Responda áudio do WhatsApp sem precisar ouvir: encaminhe a mensagem de voz para o EscreveZap, leia o texto em segundos e responda de qualquer lugar.",
@@ -70,6 +72,7 @@ class SeoPagesController < ApplicationController
     },
 
     "audio-whatsapp-texto" => {
+      ref:         "seo-audio-texto", # código de origem nos botões de WhatsApp
       keyword:     "áudio do WhatsApp em texto",
       title:       "Áudio do WhatsApp em Texto com IA | EscreveZap",
       description: "Transforme áudio do WhatsApp em texto: encaminhe para o EscreveZap e receba a transcrição com IA em segundos, em português do Brasil. Sem instalar nada.",
@@ -90,7 +93,7 @@ class SeoPagesController < ApplicationController
       faqs: [
         {
           question: "Dá pra transformar áudio do WhatsApp em texto de graça?",
-          answer:   "Sim. O plano grátis do EscreveZap tem 20 transcrições por mês, perfeito para experimentar."
+          answer:   "Sim. O plano grátis do EscreveZap tem 5 áudios para você testar, sem cadastro e sem cartão."
         },
         {
           question: "Posso transcrever áudios de grupos?",
@@ -100,6 +103,7 @@ class SeoPagesController < ApplicationController
     },
 
     "como-transcrever-audio-de-cliente" => {
+      ref:         "seo-cliente", # código de origem nos botões de WhatsApp
       keyword:     "transcrever áudio de cliente no WhatsApp",
       title:       "Como Transcrever Áudio de Cliente no WhatsApp",
       description: "Transcreva os áudios longos dos seus clientes no WhatsApp: encaminhe para o EscreveZap, leia o pedido em segundos e responda mais rápido. Comece grátis.",
@@ -130,6 +134,7 @@ class SeoPagesController < ApplicationController
     },
 
     "como-transcrever-audio-de-reuniao" => {
+      ref:         "seo-reuniao", # código de origem nos botões de WhatsApp
       keyword:     "transcrever áudio de reunião",
       title:       "Como Transcrever Áudio de Reunião no WhatsApp",
       description: "Transcreva áudio de reunião recebido no WhatsApp: encaminhe para o EscreveZap e receba o texto em segundos. No Pro, a IA ainda gera um resumo dos pontos.",
@@ -160,6 +165,7 @@ class SeoPagesController < ApplicationController
     },
 
     "como-transcrever-audio-de-corretor" => {
+      ref:         "seo-corretor", # código de origem nos botões de WhatsApp
       keyword:     "transcrever áudio de corretor",
       title:       "Transcrever Áudio de Corretor de Imóveis | EscreveZap",
       description: "Corretor recebe áudio o dia todo. Encaminhe para o EscreveZap e leia valores, propostas e detalhes de imóveis em texto no WhatsApp, em poucos segundos.",
@@ -190,6 +196,7 @@ class SeoPagesController < ApplicationController
     },
 
     "como-transcrever-audio-de-advogado" => {
+      ref:         "seo-advogado", # código de origem nos botões de WhatsApp
       keyword:     "transcrever áudio de advogado",
       title:       "Transcrever Áudio de Advogado e de Clientes | EscreveZap",
       description: "Para advogados: transcreva áudios de clientes e colegas no WhatsApp. Encaminhe para o EscreveZap e copie o relato em texto para seus documentos em segundos.",
@@ -220,6 +227,7 @@ class SeoPagesController < ApplicationController
     },
 
     "como-transcrever-audio-de-medico" => {
+      ref:         "seo-medico", # código de origem nos botões de WhatsApp
       keyword:     "transcrever áudio de médico",
       title:       "Transcrever Áudio de Médico e Pacientes | EscreveZap",
       description: "Profissionais da saúde podem transcrever áudios de pacientes no WhatsApp: encaminhe para o EscreveZap e leia o relato em texto em segundos. Comece grátis.",
@@ -250,6 +258,7 @@ class SeoPagesController < ApplicationController
     },
 
     "como-transcrever-audio-de-professor" => {
+      ref:         "seo-professor", # código de origem nos botões de WhatsApp
       keyword:     "transcrever áudio de professor",
       title:       "Transcrever Áudio de Professor e Alunos | EscreveZap",
       description: "Professores e alunos podem transcrever explicações e dúvidas em áudio no WhatsApp: encaminhe para o EscreveZap e receba o texto para estudar melhor.",
@@ -280,6 +289,7 @@ class SeoPagesController < ApplicationController
     },
 
     "escrevezap-vs-transcricao-whatsapp" => {
+      ref:         "seo-vs-nativo", # código de origem nos botões de WhatsApp
       keyword:     "transcrição nativa do WhatsApp",
       title:       "EscreveZap vs Transcrição Nativa do WhatsApp",
       description: "Compare a transcrição nativa do WhatsApp com o EscreveZap: veja quando a nativa basta e quando vale encaminhar o áudio para ter IA, formatação e resumo.",
@@ -310,6 +320,7 @@ class SeoPagesController < ApplicationController
     },
 
     "transcricao-whatsapp-nao-funciona" => {
+      ref:         "seo-nao-funciona", # código de origem nos botões de WhatsApp
       keyword:     "transcrição do WhatsApp não funciona",
       title:       "Transcrição do WhatsApp Não Funciona? Tente o EscreveZap",
       description: "A transcrição de áudio do WhatsApp não aparece ou não funciona? Veja causas comuns e uma alternativa: encaminhe o áudio para o EscreveZap e leia o texto.",
@@ -340,6 +351,7 @@ class SeoPagesController < ApplicationController
     },
 
     "transcricao-whatsapp-web" => {
+      ref:         "seo-web", # código de origem nos botões de WhatsApp
       keyword:     "transcrição no WhatsApp Web",
       title:       "Transcrição de Áudio no WhatsApp Web | EscreveZap",
       description: "Transcreva áudios no WhatsApp Web sem pegar o celular: encaminhe a mensagem de voz para o EscreveZap e leia o texto no computador em poucos segundos.",

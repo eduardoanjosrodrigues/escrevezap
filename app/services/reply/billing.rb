@@ -5,7 +5,7 @@ module Reply
     def show_billing
       plan = @user.plan
       limit = @user.transcription_limit
-      used = @session.monthly_transcription_count
+      used = @user.transcriptions_used_for_display
 
       plan_name = case plan.to_s
       when "basic" then "Basic"
@@ -24,19 +24,28 @@ module Reply
 
       days_label = days_left == 1 ? "falta 1 dia" : "faltam #{days_left} dias"
 
-      billing_text = <<~MSG
-        💳 *Seu Plano & Uso*
+      billing_text = if @user.lifetime_quota?
+        <<~MSG
+          📊 *Seu plano e uso*
 
-        *   *Plano Atual:* #{plan_name}
-        *   *Uso este mês:* #{used} de #{limit} transcrições.
-        *   *Renovação:* #{renewal_date.strftime("%d/%m/%Y")} (_#{days_label}_)
-      MSG
+          *   *Plano:* Grátis
+          *   *Áudios grátis usados:* #{used} de #{limit}
+        MSG
+      else
+        <<~MSG
+          📊 *Seu plano e uso*
+
+          *   *Plano:* #{plan_name}
+          *   *Uso este mês:* #{used} de #{limit} transcrições
+          *   *Renovação:* #{renewal_date.strftime("%d/%m/%Y")} (_#{days_label}_)
+        MSG
+      end
 
       send_message(message: billing_text)
       sleep 0.5.seconds
 
       rows = []
-      rows << { id: "upgrade_basic", title: "Assinar Basic (R$5,99)", description: "500 transcrições/mês" } if plan != "basic"
+      rows << { id: "upgrade_basic", title: "Assinar Basic (R$4,99)", description: "100 transcrições/mês" } if plan != "basic"
       rows << { id: "upgrade_pro", title: "Assinar Pro (R$19,90)", description: "2.000/mês + Transcrever no chat + IA" } if plan != "pro"
       rows << { id: "cancel_subscription", title: "Cancelar Assinatura", description: "Voltar ao plano gratuito" } if @user.subscription&.active_or_trialing?
       rows << { id: "cancel_connection", title: "❌ Voltar ao Menu", description: "Voltar para o menu principal" }
@@ -92,11 +101,7 @@ module Reply
 
       send_message(message: "⏳ *Gerando seu Pix Automático...* Aguarde um momento.")
 
-      amount = case plan
-      when "basic" then 5.99
-      when "pro" then 19.90
-      else 5.99
-      end
+      amount = Subscription::PRICES.fetch(plan.to_s, Subscription::PRICES["basic"])
 
       begin
         result = Inter::PixService.setup_automatic_pix(

@@ -47,16 +47,24 @@ class WahaSession < ApplicationRecord
   # given phone number's identity. Used both by the connected-flow webhook and
   # by the direct-chat-with-the-bot flow (Meta), so a user always maps to a
   # single WahaSession/quota pool regardless of which channel they use.
-  def self.find_or_create_for_phone!(phone:, display_name: nil)
+  # first_message: texto da primeira mensagem ao bot (nil quando o contato
+  # começa encaminhando um áudio); carrega o código de origem do site.
+  def self.find_or_create_for_phone!(phone:, display_name: nil, first_message: nil)
     session = find_or_initialize_by(waha_chat_id: "#{phone}@c.us")
 
     if session.new_record?
+      acquisition = User.acquisition_from(first_message)
       session.user = User.create!(
         name:     display_name.presence || "Novo usuário",
         provider: :phone,
-        uid:      phone
+        uid:      phone,
+        **acquisition
       )
       session.save!
+
+      UsageEvent.track(user: session.user, event_type: UsageEvent::FIRST_CONTACT,
+                       metadata: acquisition.merge(via: first_message.nil? ? "audio" : "text").compact)
+      Rails.logger.info(event: "bot_first_contact", user_id: session.user.id, **acquisition)
     end
 
     session
@@ -142,21 +150,29 @@ class WahaSession < ApplicationRecord
     end
   end
 
-  # Transcriptions that count toward this month's quota. Failed ones don't, and
-  # neither do ones stuck in processing for over an hour (abandoned jobs).
-  # `excluding` leaves out the transcription whose quota is being checked, so
-  # the 20th audio of a 20/month plan still goes through.
-  def monthly_transcriptions(excluding: nil)
-    scope = transcriptions.this_month
-                          .where.not(status: [ :failed, :awaiting_confirmation ])
+  # Transcriptions that count toward the quota. Failed ones don't, and neither
+  # do ones stuck in processing for over an hour (abandoned jobs). `excluding`
+  # leaves out the transcription whose quota is being checked, so the last
+  # audio of the plan still goes through.
+  def quota_transcriptions(excluding: nil)
+    scope = transcriptions.where.not(status: [ :failed, :awaiting_confirmation ])
                           .where("transcriptions.status <> 'processing' OR transcriptions.created_at > ?", 1.hour.ago)
     excluding ? scope.where.not(id: excluding.id) : scope
+  end
+
+  def monthly_transcriptions(excluding: nil)
+    quota_transcriptions(excluding: excluding).merge(Transcription.this_month)
   end
 
   # Soma créditos, não registros: um áudio longo confirmado vale várias
   # transcrições da cota.
   def monthly_transcription_count(excluding: nil)
     monthly_transcriptions(excluding: excluding).sum(:credits)
+  end
+
+  # Plano Grátis: o limite conta o histórico inteiro.
+  def lifetime_transcription_count(excluding: nil)
+    quota_transcriptions(excluding: excluding).sum(:credits)
   end
 
   private
@@ -226,8 +242,8 @@ class WahaSession < ApplicationRecord
             {
               title: "Conta",
               rows: [
-                { id: "menu_billing", title: "💳 Plano e Faturamento", description: "Ver limite, uso mensal e upgrades" },
-                { id: "menu_help", title: "❓ Ajuda / Como usar", description: "Relembrar instruções de transcrição" }
+                { id: "menu_billing", title: "📊 Meu plano e uso", description: "Saldo, renovação e assinatura" },
+                { id: "menu_help", title: "❓ Como usar", description: "Como encaminhar um áudio para mim" }
               ]
             }
           ],
