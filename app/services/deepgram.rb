@@ -27,6 +27,39 @@ class Deepgram
 
   KEYWORDS = %w[Pix WhatsApp CNPJ CPF boleto].freeze
 
+  LOW_BALANCE_USD = 20
+
+  # Remaining prepaid credit (USD) summed across all projects of the API key.
+  # Cached for 10 minutes; returns nil when the API is unreachable.
+  def self.balance_usd
+    Rails.cache.fetch("deepgram/balance_usd", expires_in: 10.minutes, skip_nil: true) do
+      projects = api_get("/projects").fetch("projects", [])
+      projects.sum do |project|
+        api_get("/projects/#{project['project_id']}/balances")
+          .fetch("balances", [])
+          .sum { |b| b["amount"].to_f }
+      end
+    end
+  rescue StandardError => e
+    log_error "Falha ao consultar saldo da Deepgram: #{e.message}"
+    nil
+  end
+
+  def self.api_get(path)
+    url = URI.parse("https://api.deepgram.com/v1#{path}")
+    request = Net::HTTP::Get.new(url)
+    request["Authorization"] = 'Token ' + Rails.application.credentials.dig(:deepgram, :api_key)
+
+    response = Net::HTTP.start(url.host, url.port, use_ssl: true, open_timeout: 3, read_timeout: 5) do |http|
+      http.request(request)
+    end
+
+    raise Error, "Deepgram HTTP #{response.code}: #{response.body.to_s.truncate(200)}" unless response.is_a?(Net::HTTPSuccess)
+
+    JSON.parse(response.body)
+  end
+  private_class_method :api_get
+
   def speech_to_text(twilio = false, content_type: "audio/ogg")
     log_info "Convertendo áudio para texto com Deepgram"
 

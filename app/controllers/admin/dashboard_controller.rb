@@ -68,6 +68,10 @@ module Admin
       @openai_cost_this_month   = ProviderUsage.openai.this_month.total_cost_usd
       @total_cost_this_month    = @deepgram_cost_this_month + @openai_cost_this_month
 
+      # ── Deepgram prepaid credit ─────────────────────────────────────────
+      @deepgram_balance     = Deepgram.balance_usd
+      @deepgram_balance_low = @deepgram_balance && @deepgram_balance < Deepgram::LOW_BALANCE_USD
+
       # ── External events ──────────────────────────────────────────────────
       @failed_external_events  = ExternalEvent.where(status: :failed)
                                               .where("created_at >= ?", month_start).count

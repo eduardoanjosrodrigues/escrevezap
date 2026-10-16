@@ -7,6 +7,16 @@
 
 <div class="space-y-6">
 
+  <% if @deepgram_balance_low %>
+    <div class="flex items-center gap-3 p-4 text-sm rounded-xl border border-(--color-danger) bg-(--color-danger-light) text-(--color-danger)" role="alert">
+      <i class="ph ph-warning-circle text-xl flex-shrink-0"></i>
+      <span>
+        <strong>Crédito da Deepgram baixo:</strong> restam US$ <%= "%.2f" % @deepgram_balance %>
+        (limite de alerta US$ <%= Deepgram::LOW_BALANCE_USD %>). Recarregue para não interromper as transcrições.
+      </span>
+    </div>
+  <% end %>
+
   <%# ── Row 1: Top KPIs ──────────────────────────────────────────────── %>
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
 
@@ -240,6 +250,17 @@
             <span class="text-sm font-semibold text-(--color-brand)">Total</span>
           </div>
           <span class="text-sm font-bold text-(--color-brand) font-mono">US$ <%= "%.4f" % @total_cost_this_month %></span>
+        </div>
+        <div class="flex items-center justify-between p-3 rounded-xl <%= @deepgram_balance_low ? 'bg-(--color-danger-light)' : 'bg-(--color-surface-muted)' %>">
+          <div class="flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded-lg bg-(--color-surface-raised) flex items-center justify-center">
+              <i class="ph ph-wallet text-(--color-text-muted) text-sm"></i>
+            </div>
+            <span class="text-sm text-(--color-text)">Saldo Deepgram <span class="text-xs text-(--color-text-muted)">(crédito restante)</span></span>
+          </div>
+          <span class="text-sm font-bold font-mono <%= @deepgram_balance_low ? 'text-(--color-danger)' : 'text-(--color-text)' %>">
+            <%= @deepgram_balance ? "US$ %.2f" % @deepgram_balance : "indisponível" %>
+          </span>
         </div>
       </div>
     </div>
