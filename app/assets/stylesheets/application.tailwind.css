@@ -41,6 +41,9 @@
   --color-border:        #E5E7EB;
   --color-border-strong: #D1D5DB;
 
+  /* Fonts — Montserrat só nas páginas públicas (layout landing) */
+  --font-landing: "Montserrat", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
   /* Text */
   --color-text:          #111827;
   --color-text-muted:    #6B7280;

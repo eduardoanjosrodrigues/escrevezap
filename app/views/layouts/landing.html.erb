@@ -49,10 +49,14 @@
 
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
+    <%# Montserrat só até 700: os títulos font-extrabold ficam no 700, mais leves %>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap">
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_include_tag "application", "data-turbo-track": "reload", defer: true %>
   </head>
-  <body class="bg-(--color-bg) text-(--color-text) antialiased">
+  <body class="bg-(--color-bg) text-(--color-text) font-landing antialiased">
 
 
     <%# ── Mobile sticky CTA ───────────────────────────────────────────── %>
