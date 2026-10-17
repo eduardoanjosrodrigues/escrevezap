@@ -31,6 +31,10 @@ class User < ApplicationRecord
   # testar até este limite por mês (no Grátis vale o limite total de 5).
   REACTION_TRIAL_LIMIT = 20
 
+  # Formatação com IA é recurso Pro: Grátis e Basic provam até este limite
+  # por mês (no Grátis, na prática, as 5 transcrições da vida).
+  AI_FORMAT_TRIAL_LIMIT = 5
+
   # Duração máxima de um áudio por plano. Acima disso o Free é recusado; nos
   # planos pagos o áudio encaminhado ao bot pode ser transcrito gastando
   # créditos extras (Transcription.credits_for_duration) após confirmação.
@@ -175,6 +179,18 @@ class User < ApplicationRecord
     return false if plan == "pro" || waha_session.nil?
 
     waha_session.monthly_transcriptions(excluding: excluding).waha.count >= REACTION_TRIAL_LIMIT
+  end
+
+  def ai_formats_used_this_month(excluding: nil)
+    return 0 if waha_session.nil?
+
+    scope = waha_session.transcriptions.this_month.where.not(full_formatted: nil)
+    scope = scope.where.not(id: excluding.id) if excluding
+    scope.count
+  end
+
+  def can_ai_format?(excluding: nil)
+    pro? || ai_formats_used_this_month(excluding: excluding) < AI_FORMAT_TRIAL_LIMIT
   end
 
   def active_subscriber?

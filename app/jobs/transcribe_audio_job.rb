@@ -268,10 +268,10 @@ class TranscribeAudioJob < ApplicationJob
     # Track STT provider cost
     track_transcription_usage(transcription, transcriber)
 
-    # 3. AI formatting (Pro plan only)
+    # 3. AI formatting (Pro; demais planos têm AI_FORMAT_TRIAL_LIMIT por mês)
     stage = "ai_format"
     ai_token_count = nil
-    if user.pro? && transcript.length >= AI_FORMAT_MIN_CHARS
+    if transcript.length >= AI_FORMAT_MIN_CHARS && user.can_ai_format?(excluding: transcription)
       with_summary = transcript.length >= AI_SUMMARY_MIN_CHARS
       summary, full_formatted, ai_token_count = ai_format(transcript, user, transcription, with_summary: with_summary)
     end
@@ -300,7 +300,7 @@ class TranscribeAudioJob < ApplicationJob
     metadata = { transcription_id: transcription.id, duration: transcriber&.duration, plan: user.plan }
     TrackUsageJob.perform_later(user_id: user.id, event_type: UsageEvent::TRANSCRIPTION_COMPLETED, metadata: metadata)
     if ai_token_count
-      TrackUsageJob.perform_later(user_id: user.id, event_type: UsageEvent::AI_FORMAT_COMPLETED, metadata: { transcription_id: transcription.id, tokens: ai_token_count })
+      TrackUsageJob.perform_later(user_id: user.id, event_type: UsageEvent::AI_FORMAT_COMPLETED, metadata: { transcription_id: transcription.id, tokens: ai_token_count, plan: user.plan, trial: !user.pro? })
     end
   rescue => e
     Rails.logger.error "[TranscribeAudioJob] Erro ao processar transcription #{transcription.id} (stage=#{stage}): #{e.message}"
