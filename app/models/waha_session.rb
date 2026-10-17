@@ -65,6 +65,7 @@ class WahaSession < ApplicationRecord
       UsageEvent.track(user: session.user, event_type: UsageEvent::FIRST_CONTACT,
                        metadata: acquisition.merge(via: first_message.nil? ? "audio" : "text").compact)
       Rails.logger.info(event: "bot_first_contact", user_id: session.user.id, **acquisition)
+      ActivationNudgeJob.schedule(session.user)
     end
 
     session

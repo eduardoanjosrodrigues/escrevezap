@@ -38,6 +38,34 @@ module Meta
       }
     end
 
+    # Templates MARKETING de reengajamento (ver BotNudgeJob). O texto e os
+    # botões ficam em TEMPLATE_DEFINITIONS, usado também para cadastrar na Meta
+    # (Meta::Service.create_template); aqui só entram as variáveis e os
+    # payloads dos botões de resposta rápida.
+    TEMPLATE_DEFINITIONS = {
+      "audios_nao_transcritos" => {
+        body: "Olá! Aqui é o EscreveZap. Nos últimos dias, {{1}} áudios que chegaram no seu WhatsApp " \
+              "não foram transcritos porque o limite do seu plano acabou.\n\n" \
+              "Quer voltar a receber tudo em texto? Toque em *Ver planos*.",
+        example: [ "4" ],
+        buttons: [ "Ver planos" ]
+      },
+      "continuar_transcrevendo" => {
+        body: "Olá! Você já transcreveu {{1}} áudios com o EscreveZap, cerca de {{2}} minutos que não precisou ouvir. 🙌\n\n" \
+              "Quer continuar? O *Basic* tem 100 transcrições por mês por R$ 4,99.",
+        example: [ "5", "12" ],
+        buttons: [ "Assinar Basic", "Agora não" ]
+      }
+    }.freeze
+
+    def audios_nao_transcritos(count)
+      marketing_template("audios_nao_transcritos", [ count ], [ "menu_billing" ])
+    end
+
+    def continuar_transcrevendo(count, minutes)
+      marketing_template("continuar_transcrevendo", [ count, minutes ], [ "upgrade_basic:winback", "upgrade_dismiss" ])
+    end
+
     # Template UTILITY "transcrever_no_chat_pausado" (pt_BR, id 1544226850844758),
     # cadastrado via API. Corpo sem variáveis e um botão de resposta rápida
     # "Ver opções", cujo payload (menu_connect) mostra o passo a passo de conexão.
@@ -69,6 +97,29 @@ module Meta
         meta_json: meta_json,
         rendered_message: rendered_message
       }
+    end
+
+    private
+
+    def marketing_template(name, params, payloads)
+      definition = TEMPLATE_DEFINITIONS.fetch(name)
+      params = params.map(&:to_s)
+
+      meta_json = {
+        name: name,
+        language: { code: "pt_BR" },
+        components: [
+          { type: "body", parameters: params.map { |value| { type: "text", text: value } } },
+          *payloads.each_with_index.map do |payload, index|
+            { type: "button", sub_type: "quick_reply", index: index.to_s, parameters: [ { type: "payload", payload: payload } ] }
+          end
+        ]
+      }
+
+      body = params.each_with_index.reduce(definition[:body]) { |text, (value, i)| text.gsub("{{#{i + 1}}}", value) }
+      buttons = definition[:buttons].map { |title| "[#{title}]" }.join(" ")
+
+      { meta_json: meta_json, rendered_message: "#{body}\n\n#{buttons}" }
     end
   end
 end

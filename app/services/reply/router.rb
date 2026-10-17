@@ -67,10 +67,12 @@ module Reply
         process_disconnect
 
       # Billing / Upgrade actions
-      when "upgrade_basic"
-        generate_upgrade_checkout("basic")
-      when "upgrade_pro"
-        generate_upgrade_checkout("pro")
+      # "upgrade_basic:winback" — o sufixo diz qual aviso levou ao clique
+      # (vai para o CHECKOUT_STARTED, ver BotNudgeJob)
+      when /\Aupgrade_(basic|pro)(?::([a-z_]+))?\z/
+        generate_upgrade_checkout(Regexp.last_match(1), source: Regexp.last_match(2))
+      when "upgrade_dismiss"
+        send_message(message: "Tudo bem! 👍 Se mudar de ideia, é só me chamar por aqui.")
       when "cancel_subscription"
         process_subscription_cancellation
 

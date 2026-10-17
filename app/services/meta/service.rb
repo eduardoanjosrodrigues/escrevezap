@@ -391,6 +391,20 @@ module Meta
       api_request.get("", {}, { "Accept" => response["mime_type"] })
     end
 
+    # Cadastra um template de Meta::RenderTemplate::TEMPLATE_DEFINITIONS para
+    # aprovação (fica PENDING; a Meta responde em minutos ou horas).
+    #   Meta::Service.create_template("continuar_transcrevendo", category: "MARKETING")
+    def self.create_template(name, category:)
+      definition = Meta::RenderTemplate::TEMPLATE_DEFINITIONS.fetch(name)
+      components = [
+        { type: "BODY", text: definition[:body], example: { body_text: [ definition[:example] ] } },
+        { type: "BUTTONS", buttons: definition[:buttons].map { |text| { type: "QUICK_REPLY", text: text } } }
+      ]
+
+      ApiRequest.new("#{GRAPH_URL}#{WABA_ID}", { "Authorization" => "Bearer #{token}" })
+                .post("/message_templates", { name: name, language: "pt_BR", category: category, components: components })
+    end
+
     def get_all_available_templates
       @api_request = ApiRequest.new("#{GRAPH_URL}#{@meta_waba_id}", {
         "Authorization" => "Bearer #{self.class.token}"

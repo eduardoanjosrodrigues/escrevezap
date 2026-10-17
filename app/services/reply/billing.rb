@@ -62,7 +62,7 @@ module Reply
       )
     end
 
-    def generate_upgrade_checkout(plan)
+    def generate_upgrade_checkout(plan, source: nil)
       if @user.subscription&.active_or_trialing?
         send_message(message: "⚠️ Você já possui uma assinatura ativa. Para trocar de plano, é necessário primeiro cancelar a sua assinatura atual. Após o cancelamento, você poderá assinar o novo plano.")
         show_billing
@@ -70,7 +70,8 @@ module Reply
       end
 
       UsageEvent.track(user: @user, event_type: UsageEvent::CHECKOUT_STARTED,
-                       metadata: { plan: plan, from_plan: @user.plan, out_of_credits: @user.transcription_credits_remaining.zero? })
+                       metadata: { plan: plan, from_plan: @user.plan, out_of_credits: @user.transcription_credits_remaining.zero?,
+                                   source: source }.compact)
 
       @current_conversation_state["stage"] = "waiting_for_billing_cpf"
       @current_conversation_state["pending_upgrade_plan"] = plan
@@ -134,6 +135,7 @@ module Reply
 
         UsageEvent.track(user: @user, event_type: UsageEvent::PIX_GENERATED,
                          metadata: { plan: plan, subscription_id: subscription.id })
+        PixReminderJob.schedule(subscription)
 
         # Resetar o estágio da conversação
         @current_conversation_state.delete("stage")

@@ -164,6 +164,13 @@ class User < ApplicationRecord
               .exists?
   end
 
+  # Já recebeu o aviso `kind` (FOLLOW_UP_SENT, ver BotNudgeJob)?
+  def follow_up_sent?(kind, since: nil)
+    events = UsageEvent.where(user: self, event_type: UsageEvent::FOLLOW_UP_SENT).where("metadata->>'kind' = ?", kind.to_s)
+    events = events.where(occurred_at: since..) if since
+    events.exists?
+  end
+
   def reaction_limit_reached?(excluding: nil)
     return false if plan == "pro" || waha_session.nil?
 
