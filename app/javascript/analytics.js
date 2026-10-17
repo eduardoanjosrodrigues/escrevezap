@@ -42,7 +42,12 @@ function slug(value) {
 function detectChannel() {
   const params = new URLSearchParams(location.search)
   const utm = params.get("utm_campaign") || params.get("utm_source")
-  if (utm) return slug(utm)
+  if (utm) {
+    // utm_source com domínio (o ChatGPT manda "chatgpt.com") vira o mesmo
+    // canal do referrer, senão o ChatGPT apareceria como "chatgpt-com"
+    const known = REFERRER_CHANNELS.find(([pattern]) => pattern.test(utm.toLowerCase()))
+    return known ? known[1] : slug(utm)
+  }
   if (params.has("gclid")) return "google-ads"
   if (params.has("fbclid")) return "meta-ads"
 

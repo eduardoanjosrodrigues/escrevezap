@@ -51,7 +51,30 @@ class User < ApplicationRecord
     match = ACQUISITION_CODE.match(first_message.to_s.downcase)
     return { acquisition_ref: ACQUISITION_DIRECT, acquisition_channel: nil } unless match
 
-    { acquisition_ref: match[1], acquisition_channel: match[2] }
+    { acquisition_ref: match[1], acquisition_channel: normalize_channel(match[2]) }
+  end
+
+  # "chatgpt-com" → "chatgpt": canal vindo de utm_source com domínio, gravado
+  # no navegador antes do analytics.js normalizar (o first-touch dura 30 dias).
+  def self.normalize_channel(channel)
+    channel&.sub(/-(com-br|com|ai)\z/, "")
+  end
+
+  # DDD → UF, para a quebra geográfica da aquisição (só o DDD, nunca o número).
+  DDD_STATES = {
+    "SP" => 11..19, "RJ" => [ 21, 22, 24 ], "ES" => [ 27, 28 ], "MG" => [ 31, 32, 33, 34, 35, 37, 38 ],
+    "PR" => 41..46, "SC" => 47..49, "RS" => [ 51, 53, 54, 55 ], "DF" => [ 61 ], "GO" => [ 62, 64 ],
+    "TO" => [ 63 ], "MT" => [ 65, 66 ], "MS" => [ 67 ], "AC" => [ 68 ], "RO" => [ 69 ],
+    "BA" => [ 71, 73, 74, 75, 77 ], "SE" => [ 79 ], "PE" => [ 81, 87 ], "AL" => [ 82 ], "PB" => [ 83 ],
+    "RN" => [ 84 ], "CE" => [ 85, 88 ], "PI" => [ 86, 89 ], "PA" => [ 91, 93, 94 ], "AM" => [ 92, 97 ],
+    "RR" => [ 95 ], "AP" => [ 96 ], "MA" => [ 98, 99 ]
+  }.flat_map { |state, ddds| ddds.map { |ddd| [ ddd.to_s, state ] } }.to_h.freeze
+
+  # DDD de um telefone em E.164 brasileiro ("5511987654321" → "11"); nil
+  # para número estrangeiro ou usuário sem telefone (login Google).
+  def self.ddd_of(phone)
+    digits = phone.to_s.gsub(/\D/, "")
+    digits[2, 2] if digits.start_with?("55") && digits.size.between?(12, 13) && DDD_STATES.key?(digits[2, 2])
   end
 
   def self.from_google(auth)

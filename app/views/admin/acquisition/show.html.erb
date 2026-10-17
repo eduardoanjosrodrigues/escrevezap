@@ -9,11 +9,18 @@
     </p>
     <div class="inline-flex rounded-lg border border-(--color-border) overflow-hidden text-sm">
       <% [["7", "7 dias"], ["30", "30 dias"], ["90", "90 dias"], ["all", "Tudo"]].each do |value, label| %>
-        <%= link_to label, admin_acquisition_path(period: value),
+        <%= link_to label, admin_acquisition_path(period: value, channel: @channel),
               class: "px-3 py-1.5 transition-colors #{@period == value ? 'bg-(--color-brand) text-white' : 'bg-(--color-surface) text-(--color-text-muted) hover:bg-(--color-surface-muted)'}" %>
       <% end %>
     </div>
   </div>
+
+  <% if @channel %>
+    <div class="flex items-center gap-3 rounded-xl border border-(--color-border) bg-(--color-surface-muted) px-5 py-3 text-sm">
+      <span class="text-(--color-text)">Filtrando pelo canal <span class="font-mono font-semibold"><%= @channel %></span></span>
+      <%= link_to "Limpar filtro", admin_acquisition_path(period: @period), class: "text-(--color-brand) hover:underline" %>
+    </div>
+  <% end %>
 
   <%# ── Funil total ── %>
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -32,6 +39,28 @@
         <p class="text-xs text-(--color-text-muted) mt-0.5"><%= hint %></p>
       </div>
     <% end %>
+  </div>
+
+  <%# ── Custo WhatsApp (Meta) ── %>
+  <div>
+    <p class="text-sm text-(--color-text-muted) mb-2">
+      Custo de WhatsApp: mensagens do bot oficial entregues no período, pela tabela Meta Brasil (WhatsappCost).
+      Desde 01/10/2026 a Meta cobra também respostas dentro da janela de 24h (US$ 0,0068 cada); mensagens via WhatsApp conectado (WAHA) não custam.
+    </p>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <% lead_cost = @total[:contacts].positive? ? @total[:whatsapp_usd] / @total[:contacts] : nil %>
+      <% [["Mensagens entregues", number_with_delimiter(@whatsapp[:delivered], delimiter: "."),
+           @whatsapp[:by_category].map { |cat, n| "#{cat} #{n}" }.join(" · ").presence || "nenhuma no período"],
+          ["Custo estimado", "US$ %.2f" % @whatsapp[:estimated_usd], "nova política (serviço cobrado desde 01/10)"],
+          ["Cobrado pela Meta", "US$ %.2f" % @whatsapp[:billed_usd], "mensagens com billable: true no webhook"],
+          ["Custo por lead", lead_cost ? "US$ %.4f" % lead_cost : "—", "estimado, mensagens aos #{@total[:contacts]} contatos do período"]].each do |label, value, hint| %>
+        <div class="bg-(--color-surface) border border-(--color-border) rounded-xl px-5 py-4">
+          <p class="text-xs font-medium text-(--color-text-muted) uppercase tracking-wide"><%= label %></p>
+          <p class="mt-1 text-2xl font-bold text-(--color-text) tabular-nums"><%= value %></p>
+          <p class="text-xs text-(--color-text-muted) mt-0.5"><%= hint %></p>
+        </div>
+      <% end %>
+    </div>
   </div>
 
   <%# ── Funil de pagamento ── %>
@@ -61,7 +90,15 @@
     <%= render "funnel_table", title: "Por página", rows: @by_page,
           hint: "home, precos, seo-*, blog, ferramenta… e direto (sem código: contato compartilhado ou áudio direto)" %>
     <%= render "funnel_table", title: "Por canal", rows: @by_channel,
-          hint: "utm_campaign/utm_source da primeira visita, ou buscador/rede social de onde veio; — = acesso direto" %>
+          hint: "utm_campaign/utm_source da primeira visita, ou buscador/rede social de onde veio; — = acesso direto. Clique para filtrar a página",
+          link_label: ->(channel) { admin_acquisition_path(period: @period, channel: channel) } %>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+    <%= render "funnel_table", title: "Por estado", rows: @by_state,
+          hint: "UF pelo DDD do WhatsApp; — = número estrangeiro ou login sem telefone" %>
+    <%= render "funnel_table", title: "Por DDD", rows: @by_ddd,
+          hint: "DDD do WhatsApp do contato" %>
   </div>
 
   <%= render "funnel_table", title: "Por botão", rows: @by_ref,
@@ -80,6 +117,7 @@
             <th class="px-5 py-3 text-left text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Cliente</th>
             <th class="px-5 py-3 text-left text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Botão</th>
             <th class="px-5 py-3 text-left text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Canal</th>
+            <th class="px-5 py-3 text-left text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">DDD</th>
             <th class="px-5 py-3 text-left text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Status</th>
           </tr>
         </thead>
@@ -90,6 +128,7 @@
               <td class="px-5 py-2.5"><%= link_to r[:name], admin_user_path(r[:id]), class: "text-(--color-brand) hover:underline" %></td>
               <td class="px-5 py-2.5 font-mono text-xs"><%= r[:ref] %></td>
               <td class="px-5 py-2.5 font-mono text-xs"><%= r[:channel] %></td>
+              <td class="px-5 py-2.5 font-mono text-xs whitespace-nowrap"><%= r[:ddd] == "—" ? "—" : "#{r[:ddd]} · #{r[:state]}" %></td>
               <td class="px-5 py-2.5 text-xs">
                 <% if r[:paid] %>
                   <span class="px-2 py-0.5 rounded-full bg-(--color-brand) text-white font-semibold"><%= r[:plan].capitalize %></span>

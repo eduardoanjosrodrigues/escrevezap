@@ -66,7 +66,8 @@ module Admin
       # ── Provider costs ──────────────────────────────────────────────────
       @deepgram_cost_this_month = ProviderUsage.deepgram.this_month.total_cost_usd
       @openai_cost_this_month   = ProviderUsage.openai.this_month.total_cost_usd
-      @total_cost_this_month    = @deepgram_cost_this_month + @openai_cost_this_month
+      @whatsapp_cost_this_month = WhatsappCost.summary(WhatsappCost.messages(since: month_start))[:estimated_usd]
+      @total_cost_this_month    = @deepgram_cost_this_month + @openai_cost_this_month + @whatsapp_cost_this_month
 
       # ── Deepgram prepaid credit ─────────────────────────────────────────
       @deepgram_balance     = Deepgram.balance_usd

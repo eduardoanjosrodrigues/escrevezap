@@ -1,4 +1,5 @@
-<%# locals: title, rows ([[label, funnel]]), hint %>
+<%# locals: title, rows ([[label, funnel]]), hint, link_label (opcional: label → URL) %>
+<% link_label = local_assigns[:link_label] %>
 <div class="bg-(--color-surface) border border-(--color-border) rounded-xl overflow-hidden">
   <div class="px-5 py-4 border-b border-(--color-border)">
     <h2 class="text-sm font-semibold text-(--color-text)"><%= title %></h2>
@@ -14,12 +15,15 @@
             <th class="px-5 py-3 text-right text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Transcreveram</th>
             <th class="px-5 py-3 text-right text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Voltaram</th>
             <th class="px-5 py-3 text-right text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Assinaram</th>
+            <th class="px-5 py-3 text-right text-xs font-medium text-(--color-text-muted) uppercase tracking-wide" title="Custo estimado de WhatsApp (Meta) por lead">WA/lead</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-(--color-border)">
           <% rows.each do |label, f| %>
             <tr class="hover:bg-(--color-surface-muted)">
-              <td class="px-5 py-2.5 font-mono text-xs text-(--color-text)"><%= label %></td>
+              <td class="px-5 py-2.5 font-mono text-xs text-(--color-text)">
+                <%= link_label ? link_to(label, link_label.call(label), class: "text-(--color-brand) hover:underline") : label %>
+              </td>
               <td class="px-5 py-2.5 text-right font-semibold tabular-nums"><%= f[:contacts] %></td>
               <% %i[transcribed returned paid].each do |step| %>
                 <td class="px-5 py-2.5 text-right tabular-nums">
@@ -27,6 +31,9 @@
                   <span class="ml-1 text-xs text-(--color-text-muted)"><%= f[:contacts].positive? ? number_to_percentage(f[step] * 100.0 / f[:contacts], precision: 0) : "—" %></span>
                 </td>
               <% end %>
+              <td class="px-5 py-2.5 text-right font-mono text-xs tabular-nums">
+                <%= f[:contacts].positive? ? "US$ %.4f" % (f[:whatsapp_usd] / f[:contacts]) : "—" %>
+              </td>
             </tr>
           <% end %>
         </tbody>
