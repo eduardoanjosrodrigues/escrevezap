@@ -9,10 +9,6 @@ class TranscribeAudioJob < ApplicationJob
   # Precisa de pelo menos ~3-4 frases para um resumo agregar valor.
   AI_SUMMARY_MIN_CHARS = 350
 
-  # Selects which STT engine to use. Defaults to deepgram.
-  # Set credentials[:transcription_engine] = "gpt-4o-transcribe" to switch to OpenAI.
-  TRANSCRIPTION_ENGINE = (Rails.application.credentials[:transcription_engine] || "deepgram").freeze
-
   # ── Prompts ────────────────────────────────────────────────────────────
 
   # "Polished" — texto refinado com resumo e formatação completa.
@@ -250,18 +246,20 @@ class TranscribeAudioJob < ApplicationJob
 
     # 2. Write to a temp file and transcribe
     stage = "stt"
+    engine = TranscriptionEngine.for(user)
+    transcription.update!(engine: engine)
     transcriber = nil
     transcript = Tempfile.create([ "wt_audio_#{transcription.id}", ".ogg" ], binmode: true) do |file|
       file.write(audio_data)
       file.flush
-      transcriber = build_transcriber(file.path)
+      transcriber = TranscriptionEngine.build(engine, file.path)
       text = transcriber.speech_to_text
       transcription.update!(audio_duration: transcriber.duration) if transcriber.duration
       text
     end
 
     if transcript.blank?
-      fail_transcription!(transcription, "#{TRANSCRIPTION_ENGINE} retornou transcrição vazia")
+      fail_transcription!(transcription, "#{engine} retornou transcrição vazia")
       return
     end
 
@@ -297,7 +295,7 @@ class TranscribeAudioJob < ApplicationJob
     end
 
     # 6. Track usage event (async, non-critical)
-    metadata = { transcription_id: transcription.id, duration: transcriber&.duration, plan: user.plan }
+    metadata = { transcription_id: transcription.id, duration: transcriber&.duration, plan: user.plan, engine: engine }
     TrackUsageJob.perform_later(user_id: user.id, event_type: UsageEvent::TRANSCRIPTION_COMPLETED, metadata: metadata)
     if ai_token_count
       TrackUsageJob.perform_later(user_id: user.id, event_type: UsageEvent::AI_FORMAT_COMPLETED, metadata: { transcription_id: transcription.id, tokens: ai_token_count, plan: user.plan, trial: !user.pro? })
@@ -390,40 +388,31 @@ class TranscribeAudioJob < ApplicationJob
     result
   end
 
-  # ── Engine factory ────────────────────────────────────────────────────
-
-  def build_transcriber(file_path)
-    case TRANSCRIPTION_ENGINE
-    when "gpt-4o-transcribe"
-      GptTranscribe.new(file_path)
-    else
-      Deepgram.new(file_path)
-    end
-  end
-
   # ── Provider cost tracking ─────────────────────────────────────────────
 
   def track_transcription_usage(transcription, transcriber)
     case transcriber
     when Deepgram
-      track_deepgram_usage(transcription, transcriber.duration)
+      track_per_second_usage(transcription, "deepgram", transcriber.duration, ProviderUsage::DEEPGRAM_USD_PER_SECOND)
+    when Soniox
+      track_per_second_usage(transcription, "soniox", transcriber.duration, ProviderUsage::SONIOX_USD_PER_SECOND)
     when GptTranscribe
       track_gpt_transcribe_usage(transcription, transcriber.total_tokens, transcriber.duration)
     end
   end
 
-  def track_deepgram_usage(transcription, duration_seconds)
+  def track_per_second_usage(transcription, provider, duration_seconds, usd_per_second)
     return unless duration_seconds.present?
 
     ProviderUsage.create!(
       transcription: transcription,
-      provider:      "deepgram",
+      provider:      provider,
       units:         duration_seconds.to_f,
       unit_type:     "seconds",
-      cost_usd:      duration_seconds.to_f * ProviderUsage::DEEPGRAM_USD_PER_SECOND
+      cost_usd:      duration_seconds.to_f * usd_per_second
     )
   rescue => e
-    Rails.logger.warn "[TranscribeAudioJob] Failed to track Deepgram usage: #{e.message}"
+    Rails.logger.warn "[TranscribeAudioJob] Failed to track #{provider} usage: #{e.message}"
     Sentry.capture_exception(e)
     record_error!(transcription, stage: "track_usage", error: e)
   end

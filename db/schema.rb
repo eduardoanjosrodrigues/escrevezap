@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_16_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_17_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -145,6 +145,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_130000) do
     t.datetime "created_at", null: false
     t.integer "credits", default: 1, null: false
     t.string "direction", default: "incoming", null: false
+    t.string "engine"
     t.text "error_message"
     t.text "full_formatted"
     t.string "media_id"
@@ -157,6 +158,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_130000) do
     t.datetime "updated_at", null: false
     t.string "waha_message_id"
     t.index ["channel"], name: "index_transcriptions_on_channel"
+    t.index ["engine", "created_at"], name: "index_transcriptions_on_engine_and_created_at"
     t.index ["monitored_contact_id", "created_at"], name: "index_transcriptions_on_monitored_contact_id_and_created_at"
     t.index ["monitored_contact_id"], name: "index_transcriptions_on_monitored_contact_id"
     t.index ["status"], name: "index_transcriptions_on_status"
@@ -195,6 +197,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_130000) do
     t.string "provider"
     t.datetime "remember_created_at"
     t.integer "sign_in_count", default: 0, null: false
+    t.string "transcription_engine"
     t.string "uid"
     t.datetime "updated_at", null: false
     t.index ["acquisition_ref"], name: "index_users_on_acquisition_ref"

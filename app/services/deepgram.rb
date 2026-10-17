@@ -14,13 +14,15 @@ class Deepgram
   DEFAULT_PARAMS = {
     model:            "nova-3",
     language:         "pt-BR",
-    smart_format:     true,
+    # smart_format troca "um" por "1" ("1 beijo", "1 banhozinho") mesmo com
+    # numerals: false. Sem ele os números saem por extenso ("duzentos").
+    smart_format:     false,
     punctuate:        true,
     paragraphs:       true,
     diarize:          false,
     filler_words:     true,
     utterances:       true,
-    numerals:         true,
+    numerals:         false,
     profanity_filter: false,
     detect_language:  false
   }.freeze
