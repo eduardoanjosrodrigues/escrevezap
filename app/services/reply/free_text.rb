@@ -11,6 +11,20 @@ module Reply
     # como usar; as mais longas costumam ser perguntas e vão para o time.
     QUESTION_MIN_LENGTH = 15
 
+    # Contas WhatsApp Business respondem os nossos templates (lembretes,
+    # avisos) com a mensagem de ausência. Isso não é pergunta: não
+    # respondemos (evita bot conversando com bot) nem repassamos para o time.
+    AUTO_REPLY_PATTERNS = [
+      /agradecemos (o seu |o |pelo |seu )?contato/,
+      /fora do (nosso )?(horario|expediente)/,
+      /\bretornaremos\b/,
+      /responderemos (assim que|o mais breve|em breve)/,
+      /mensagem automatica/
+    ].freeze
+    LINK_ONLY = %r{\A(https?://)?(www\.)?[\w-]+(\.[\w-]+)+(/\S*)?\z}
+    # Ninguém lê um template e responde em menos que isso.
+    AUTO_REPLY_WINDOW = 30.seconds
+
     FAQS = [
       { patterns: [/\Amenu\z/, /\bopcoes\b/, /\bmenu principal\b/], action: :show_menu },
       {
@@ -42,6 +56,11 @@ module Reply
       return if text.start_with?("unsupported message type")
       return if bot_loop_silenced?
 
+      if auto_reply?(text)
+        Rails.logger.info(event: "bot_auto_reply_ignored", user_id: @user.id)
+        return
+      end
+
       faq = FAQS.find { |f| f[:patterns].any? { |p| p.match?(text) } }
 
       if faq
@@ -56,6 +75,13 @@ module Reply
       end
     end
 
+    def auto_reply?(text)
+      AUTO_REPLY_PATTERNS.any? { |p| p.match?(text) } ||
+        LINK_ONLY.match?(text) ||
+        WhatsappMessage.where(user: @user, direction: "outgoing", message_type: "template")
+                       .where(created_at: AUTO_REPLY_WINDOW.ago..).exists?
+    end
+
     def answer_faq(answer)
       send_message(message: answer)
     end
@@ -64,7 +90,18 @@ module Reply
       send_message(message: "Recebi sua mensagem! 🙌 Vou passar para o nosso time, que te responde pelo WhatsApp do suporte em breve.")
 
       text = "Pergunta de #{@display_name.presence || 'usuário'} (+#{@phone}, user #{@user.id}) no bot do EscreveZap:\n\n#{message}"
-      User.where(admin: true).find_each { |admin| admin.notify(subject: "Pergunta no bot do EscreveZap", text: text) }
+      # Alerta interno: o botão do email leva para a conversa no admin, não
+      # para a assinatura (padrão dos emails de cliente).
+      conversation_url = Rails.application.routes.url_helpers.admin_user_whatsapp_messages_url(
+        @user, **Rails.application.config.action_mailer.default_url_options
+      )
+      User.where(admin: true).find_each do |admin|
+        admin.notify(
+          subject: "Pergunta no bot: #{@display_name.presence || "user #{@user.id}"}",
+          text: text,
+          email_cta: { label: "Ver conversa no admin", url: conversation_url }
+        )
+      end
 
       Rails.logger.info(event: "bot_question_forwarded", user_id: @user.id)
     end
