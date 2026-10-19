@@ -10,6 +10,11 @@ class WahaSessionDisconnectCheckJob < ApplicationJob
   MAX_CHECKS   = 5
   RECHECK_WAIT = 2.minutes
 
+  # Se o aviso falhar (ex.: Meta recusou o template), tenta de novo mais tarde
+  # em vez de dar a queda como avisada.
+  NOTICE_RETRIES    = 3
+  NOTICE_RETRY_WAIT = 1.hour
+
   def perform(waha_session_id, check = 1)
     session = WahaSession.find_by(id: waha_session_id)
     return unless session
@@ -31,7 +36,7 @@ class WahaSessionDisconnectCheckJob < ApplicationJob
       waha_status: session.waha_status,
       provider: user.provider
 
-    user.notify(
+    delivered = user.notify(
       subject:   I18n.t("whatsapp_notices.disconnected.subject"),
       text:      disconnect_text(user),
       template:  Meta::RenderTemplate.new(nil).transcrever_no_chat_pausado,
@@ -40,9 +45,22 @@ class WahaSessionDisconnectCheckJob < ApplicationJob
         url:   Rails.application.routes.url_helpers.app_waha_session_url(**Rails.application.config.action_mailer.default_url_options)
       }
     )
+    retry_notice(session, check) unless delivered
   end
 
   private
+
+  def retry_notice(session, check)
+    session.update_column(:disconnect_notified_at, nil)
+    return if check >= MAX_CHECKS + NOTICE_RETRIES
+
+    log_info "Aviso de desconexão falhou, tentando de novo",
+      event: "whatsapp_disconnect_notice_failed",
+      user_id: session.user_id,
+      waha_session_id: session.id,
+      check: check
+    self.class.set(wait: NOTICE_RETRY_WAIT).perform_later(session.id, [ check, MAX_CHECKS ].max + 1)
+  end
 
   # Um aviso por desconexão: se já avisamos e a sessão não voltou a working
   # desde então, é a mesma queda (ex.: vários jobs da mesma sessão).

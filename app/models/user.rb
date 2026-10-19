@@ -204,6 +204,7 @@ class User < ApplicationRecord
   # da janela de 24h a Meta só entrega mensagens iniciadas pela empresa via
   # template aprovado, então ele é usado no lugar do texto livre nesse caso.
   # email_cta: { label:, url: } para o botão do email.
+  # Devolve true se enviou (ou enfileirou o email) e false se falhou.
   def notify(subject:, text:, template: nil, email_cta: nil)
     if provider == "phone" && uid.present?
       meta = Meta::Service.new(recipient: uid)
@@ -214,10 +215,14 @@ class User < ApplicationRecord
       end
     elsif email.present?
       NotificationMailer.notice(self, subject, text, email_cta).deliver_later
+    else
+      return false
     end
+    true
   rescue => e
     Rails.logger.error "[User#notify] Falha ao notificar user #{id}: #{e.message}"
     Sentry.capture_exception(e)
+    false
   end
 
   # A Meta permite texto livre só até 24h depois da última mensagem do usuário
