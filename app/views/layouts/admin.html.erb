@@ -47,6 +47,12 @@
             Aquisição
           <% end %>
 
+          <%= link_to admin_upcoming_payments_path,
+                class: "flex items-center gap-2.5 px-3 py-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors #{request.path.start_with?(admin_upcoming_payments_path) ? 'bg-white/10 text-white font-semibold' : ''}" do %>
+            <i class="ph ph-calendar-dots text-base"></i>
+            Pagamentos
+          <% end %>
+
           <%= link_to admin_transcriptions_path,
                 class: "flex items-center gap-2.5 px-3 py-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors #{request.path.start_with?(admin_transcriptions_path) ? 'bg-white/10 text-white font-semibold' : ''}" do %>
             <i class="ph ph-microphone text-base"></i>

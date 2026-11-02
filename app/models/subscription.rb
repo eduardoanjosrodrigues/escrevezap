@@ -46,6 +46,27 @@ class Subscription < ApplicationRecord
     inter_cobr_txid.present? && inter_cobr_due_date == next_charge_date
   end
 
+  # Em que ponto do ciclo a próxima cobrança está, espelhando as regras do
+  # Inter::RecurringBilling (cobr criada entre D-7 e D-2, carência após vencer).
+  def billing_stage(today = Date.current)
+    return :no_date if next_charge_date.blank?
+    return :paid if cobr_created_for_next_charge? && inter_cobr_status == Inter::RecurringBilling::PAID_STATUS
+
+    days = (next_charge_date - today).to_i
+    window = Inter::RecurringBilling::CREATE_WINDOW
+
+    if cobr_created_for_next_charge?
+      return :cobr_failed if Inter::RecurringBilling::FAILED_STATUSES.include?(inter_cobr_status)
+      days.negative? ? :overdue : :cobr_created
+    elsif days > window.max
+      :waiting_window
+    elsif days >= window.min
+      :in_window
+    else
+      :missing_cobr
+    end
+  end
+
   # Cancela o Pix Automático no Inter e a assinatura aqui. Retorna false se o
   # Inter falhou: a assinatura é cancelada localmente mesmo assim e o usuário
   # pode cancelar o débito pelo app do banco.

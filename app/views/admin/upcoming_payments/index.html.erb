@@ -1,0 +1,152 @@
+<% content_for :page_title, "Próximos pagamentos" %>
+
+<%
+  stage_badges = {
+    paid:           [ "Pago",                 "bg-emerald-100 text-emerald-700" ],
+    cobr_created:   [ "Cobrança criada",      "bg-(--color-brand-light) text-(--color-brand)" ],
+    in_window:      [ "Na janela (D-7 a D-2)", "bg-amber-100 text-amber-700" ],
+    waiting_window: [ "Aguardando janela",    "bg-(--color-surface-raised) text-(--color-text-muted)" ],
+    overdue:        [ "Vencida",              "bg-(--color-danger-light) text-(--color-danger)" ],
+    cobr_failed:    [ "Cobrança falhou",      "bg-(--color-danger-light) text-(--color-danger)" ],
+    missing_cobr:   [ "Sem cobrança",         "bg-(--color-danger-light) text-(--color-danger)" ],
+    no_date:        [ "Sem vencimento",       "bg-(--color-danger-light) text-(--color-danger)" ]
+  }
+  window = Inter::RecurringBilling::CREATE_WINDOW
+%>
+
+<div class="space-y-5">
+
+  <%# ── Resumo ── %>
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <%= render "admin/dashboard/stat_card", label: "A receber em 7 dias", value: "R$%.2f" % @due_7d_amount, icon: "ph-calendar-check", highlight: true %>
+    <%= render "admin/dashboard/stat_card", label: "A receber em 30 dias", value: "R$%.2f" % @due_30d_amount, icon: "ph-calendar" %>
+    <%= render "admin/dashboard/stat_card", label: "Cobranças a criar (na janela)", value: @in_window, icon: "ph-hourglass" %>
+    <%= render "admin/dashboard/stat_card", label: "Precisam de atenção", value: @problems, icon: "ph-warning", danger: @problems > 0 %>
+  </div>
+
+  <%# ── Previsão por mês ── %>
+  <div class="bg-(--color-surface) border border-(--color-border) rounded-xl px-5 py-4">
+    <h2 class="text-sm font-semibold text-(--color-text) mb-3">Previsão de recebimento</h2>
+    <div class="grid grid-cols-3 gap-3">
+      <% @forecast.each do |month, amount| %>
+        <div>
+          <p class="text-xs text-(--color-text-muted) capitalize"><%= l(month, format: "%B %Y") %></p>
+          <p class="text-lg font-bold text-(--color-text)">R$<%= "%.2f" % amount %></p>
+        </div>
+      <% end %>
+    </div>
+    <p class="mt-3 text-[11px] text-(--color-text-subtle)">
+      Considera as assinaturas ativas de hoje renovando todo mês, sem churn. O job de cobrança roda todo dia às 9h e cria a cobrança recorrente entre D-<%= window.max %> e D-<%= window.min %>.
+    </p>
+  </div>
+
+  <%# ── Calendário das assinaturas ── %>
+  <div class="bg-(--color-surface) border border-(--color-border) rounded-xl overflow-hidden">
+    <div class="px-5 py-4 border-b border-(--color-border)">
+      <h2 class="text-sm font-semibold text-(--color-text)">
+        Calendário das assinaturas
+        <span class="ml-1.5 text-xs font-normal text-(--color-text-muted)">(<%= @subscriptions.size %>)</span>
+      </h2>
+    </div>
+
+    <% if @subscriptions.any? %>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-(--color-surface-muted) border-b border-(--color-border)">
+            <tr>
+              <th class="px-5 py-3 text-left text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Próximo vencimento</th>
+              <th class="px-5 py-3 text-left text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Cliente</th>
+              <th class="px-5 py-3 text-left text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Plano</th>
+              <th class="px-5 py-3 text-right text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Valor</th>
+              <th class="px-5 py-3 text-left text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Situação</th>
+              <th class="px-5 py-3 text-left text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Cobrança (cobr)</th>
+              <th class="px-5 py-3 text-left text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Âncora</th>
+              <th class="px-5 py-3 text-left text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Ciclos seguintes</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-(--color-border)">
+            <% @subscriptions.each do |s| %>
+              <% label, badge_class = stage_badges.fetch(@stages[s.id]) %>
+              <% days = s.next_charge_date && (s.next_charge_date - @today).to_i %>
+              <tr class="hover:bg-(--color-surface-muted) transition-colors align-top">
+                <td class="px-5 py-3 whitespace-nowrap">
+                  <% if s.next_charge_date %>
+                    <div class="font-medium text-(--color-text)"><%= l(s.next_charge_date, format: "%d/%m/%Y") %></div>
+                    <div class="text-[11px] <%= days.negative? ? 'text-(--color-danger)' : 'text-(--color-text-muted)' %>">
+                      <%= days.zero? ? "hoje" : days.negative? ? "há #{-days} dia(s)" : "em #{days} dia(s)" %>
+                    </div>
+                  <% else %>
+                    —
+                  <% end %>
+                </td>
+                <td class="px-5 py-3 text-xs">
+                  <%= link_to s.user.display_name, admin_user_path(s.user), class: "font-medium text-(--color-brand) hover:underline" %>
+                  <div class="text-[11px] text-(--color-text-muted)">#<%= s.id %> · <%= s.status %></div>
+                </td>
+                <td class="px-5 py-3 text-xs">
+                  <span class="font-medium text-(--color-text) capitalize"><%= s.plan %></span>
+                  <% if s.pending_downgrade? %>
+                    <div class="text-[11px] text-amber-700">→ <%= s.pending_plan %> no próximo ciclo</div>
+                  <% end %>
+                </td>
+                <td class="px-5 py-3 text-xs text-right font-mono whitespace-nowrap">R$<%= "%.2f" % s.price %></td>
+                <td class="px-5 py-3">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap <%= badge_class %>"><%= label %></span>
+                </td>
+                <td class="px-5 py-3 text-xs text-(--color-text-muted) whitespace-nowrap">
+                  <% if s.cobr_created_for_next_charge? %>
+                    <span class="font-mono"><%= s.inter_cobr_status %></span>
+                  <% elsif s.next_charge_date %>
+                    criada em <%= l(s.next_charge_date - window.max, format: "%d/%m") %>–<%= l(s.next_charge_date - window.min, format: "%d/%m") %>
+                  <% end %>
+                  <% if s.inter_cobr_due_date && !s.cobr_created_for_next_charge? %>
+                    <div class="text-[11px]">última: <%= l(s.inter_cobr_due_date, format: "%d/%m") %> · <span class="font-mono"><%= s.inter_cobr_status %></span></div>
+                  <% end %>
+                </td>
+                <td class="px-5 py-3 text-xs text-(--color-text-muted) whitespace-nowrap">
+                  <%= s.billing_anchor_date ? l(s.billing_anchor_date, format: "%d/%m/%Y") : "—" %>
+                </td>
+                <td class="px-5 py-3 text-xs text-(--color-text-muted) whitespace-nowrap">
+                  <% if s.billing_anchor_date && s.next_charge_date %>
+                    <%= upcoming_dues(s, @today, s.next_charge_date >> 3).drop(1).first(3).map { |d| l(d, format: "%d/%m") }.join(" · ") %>
+                  <% else %>
+                    —
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="px-5 py-16 text-center">
+        <i class="ph ph-calendar-blank text-3xl text-(--color-text-subtle)"></i>
+        <p class="mt-2 text-sm text-(--color-text-muted)">Nenhuma assinatura ativa.</p>
+      </div>
+    <% end %>
+  </div>
+
+  <%# ── Encerradas recentemente ── %>
+  <% if @recently_ended.any? %>
+    <div class="bg-(--color-surface) border border-(--color-border) rounded-xl overflow-hidden">
+      <div class="px-5 py-4 border-b border-(--color-border)">
+        <h2 class="text-sm font-semibold text-(--color-text)">Encerradas nos últimos 30 dias</h2>
+      </div>
+      <table class="w-full text-sm">
+        <tbody class="divide-y divide-(--color-border)">
+          <% @recently_ended.each do |s| %>
+            <tr>
+              <td class="px-5 py-2.5 text-xs"><%= link_to s.user.display_name, admin_user_path(s.user), class: "text-(--color-brand) hover:underline" %></td>
+              <td class="px-5 py-2.5 text-xs capitalize"><%= s.plan %></td>
+              <td class="px-5 py-2.5 text-xs font-mono"><%= s.status %></td>
+              <td class="px-5 py-2.5 text-xs text-(--color-text-muted)"><%= l((s.cancelled_at || s.updated_at).to_date, format: "%d/%m/%Y") %></td>
+              <td class="px-5 py-2.5 text-xs text-(--color-text-muted)">
+                <% if s.inter_cobr_status.present? %>última cobr: <span class="font-mono"><%= s.inter_cobr_status %></span><% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</div>
