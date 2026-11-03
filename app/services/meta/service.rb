@@ -393,7 +393,7 @@ module Meta
 
     # Cadastra um template de Meta::RenderTemplate::TEMPLATE_DEFINITIONS para
     # aprovação (fica PENDING; a Meta responde em minutos ou horas).
-    #   Meta::Service.create_template("continuar_transcrevendo", category: "MARKETING")
+    #   Meta::Service.create_template("continuar_transcrevendo_v2", category: "MARKETING")
     def self.create_template(name, category:)
       definition = Meta::RenderTemplate::TEMPLATE_DEFINITIONS.fetch(name)
       components = [

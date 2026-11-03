@@ -53,7 +53,7 @@ module Reply
 
       rows = []
       prices = Subscription::PRICES
-      rows << { id: "upgrade_basic", title: "Assinar Basic (#{PlanMessages.brl(prices["basic"])})", description: "#{User::TRANSCRIPTION_LIMITS["basic"]} transcrições/mês" } if plan != "basic"
+      rows << { id: "upgrade_basic", title: "Assinar Basic (#{PlanMessages.brl(prices["basic"])})", description: "#{User::TRANSCRIPTION_LIMITS["basic"]} transcrições/mês, organizadas com IA" } if plan != "basic"
       rows << { id: "buy_pack", title: "Pacote (#{PlanMessages.brl(AudioPack::PRICE)})", description: "#{AudioPack::CREDITS} transcrições com IA, pagamento único" } if @user.free?
       rows << { id: "upgrade_pro", title: "Assinar Pro (#{PlanMessages.brl(prices["pro"])})", description: "2.000/mês + Transcrever no chat + IA" } if plan != "pro"
       rows << { id: "cancel_subscription", title: "Cancelar Assinatura", description: "Voltar ao plano gratuito" } if @user.subscription&.active_or_trialing?

@@ -108,8 +108,8 @@ The product currently supports (source of truth: `User::TRANSCRIPTION_LIMITS`,
 
 ## Basic
 
-- R$4,99/month, 100 transcriptions per month
-- 5 AI formattings per month to try
+- R$5,99/month, 100 transcriptions per month
+- AI formatting on every transcription (no AI summary: that stays Pro/pack)
 - no branding
 
 ## Audio pack (one-time)
@@ -126,7 +126,7 @@ The product currently supports (source of truth: `User::TRANSCRIPTION_LIMITS`,
 
 Each subscription stores its own `price`: price changes only apply to new
 subscriptions (Pix Automático is authorized with a fixed `valorRec`).
-Subscribers from before Nov/2026 keep paying R$19,90 for Pro.
+Subscribers from before Nov/2026 keep paying R$19,90 for Pro and R$4,99 for Basic.
 
 ---
 

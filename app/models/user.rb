@@ -32,8 +32,8 @@ class User < ApplicationRecord
   # testar até este limite por mês (no Grátis vale o limite total de 5).
   REACTION_TRIAL_LIMIT = 20
 
-  # Formatação com IA é recurso Pro: Grátis e Basic provam até este limite
-  # por mês (no Grátis, na prática, as 5 transcrições da vida).
+  # Formatação com IA: Basic, Pro e pacote formatam sempre; o Grátis prova
+  # até este limite por mês (na prática, as 5 transcrições da vida).
   AI_FORMAT_TRIAL_LIMIT = 5
 
   # Duração máxima de um áudio por plano. Acima disso o Free é recusado; nos
@@ -216,7 +216,13 @@ class User < ApplicationRecord
   end
 
   def can_ai_format?(excluding: nil)
-    pro_features? || ai_formats_used_this_month(excluding: excluding) < AI_FORMAT_TRIAL_LIMIT
+    pro_features? || basic? || ai_formats_used_this_month(excluding: excluding) < AI_FORMAT_TRIAL_LIMIT
+  end
+
+  # Resumo com IA é do Pro e do pacote (o Grátis também vê, no teste); o
+  # Basic recebe só o texto formatado.
+  def ai_summary?
+    !basic?
   end
 
   def active_subscriber?

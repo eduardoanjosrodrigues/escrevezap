@@ -22,7 +22,7 @@
 
   plans = {
     "free"  => { label: "Grátis", price: "R$0",     limit: User::TRANSCRIPTION_LIMITS["free"],  highlights: ["Para testar o EscreveZap", "Encaminhe áudios para o bot"], icon: "ph-gift",      tone: "muted" },
-    "basic" => { label: "Basic",  price: Reply::PlanMessages.brl(Subscription::PRICES["basic"]),  limit: User::TRANSCRIPTION_LIMITS["basic"], highlights: ["Sem assinatura visual", "Ideal para rotina diária"],    icon: "ph-lightning", tone: "brand" },
+    "basic" => { label: "Basic",  price: Reply::PlanMessages.brl(Subscription::PRICES["basic"]),  limit: User::TRANSCRIPTION_LIMITS["basic"], highlights: ["Texto organizado com IA", "Sem assinatura visual"],    icon: "ph-lightning", tone: "brand" },
     "pro"   => { label: "Pro",    price: Reply::PlanMessages.brl(Subscription::PRICES["pro"]), limit: User::TRANSCRIPTION_LIMITS["pro"], highlights: ["Resumo e formatação com IA", "Produtividade máxima"],    icon: "ph-star",      tone: "premium" },
   }
 

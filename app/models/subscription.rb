@@ -20,7 +20,7 @@ class Subscription < ApplicationRecord
   # Preços para novas assinaturas. Cada assinatura guarda o seu em `price`
   # (o valorRec do Pix Automático é fixo), então mudar aqui não afeta quem
   # já assina.
-  PRICES = { "basic" => 4.99, "pro" => 11.99 }.freeze
+  PRICES = { "basic" => 5.99, "pro" => 11.99 }.freeze
 
   # Dias de tolerância após o vencimento antes de expirar (o Inter permite
   # retentativas por até 7 dias - PERMITE_3R_7D).

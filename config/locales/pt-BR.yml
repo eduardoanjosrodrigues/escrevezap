@@ -398,6 +398,7 @@ pt-BR:
         description: "Para uso moderado."
         features:
           - "100 transcrições por mês"
+          - "Texto organizado em parágrafos com IA"
           - "Sem marca nas respostas"
           - "Teste o Transcrever no chat (20/mês)"
           - "Suporte por email"

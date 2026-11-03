@@ -266,11 +266,11 @@ class TranscribeAudioJob < ApplicationJob
     # Track STT provider cost
     track_transcription_usage(transcription, transcriber)
 
-    # 3. AI formatting (Pro; demais planos têm AI_FORMAT_TRIAL_LIMIT por mês)
+    # 3. AI formatting (pagos sempre; Grátis tem AI_FORMAT_TRIAL_LIMIT por mês)
     stage = "ai_format"
     ai_token_count = nil
     if transcript.length >= AI_FORMAT_MIN_CHARS && user.can_ai_format?(excluding: transcription)
-      with_summary = transcript.length >= AI_SUMMARY_MIN_CHARS
+      with_summary = transcript.length >= AI_SUMMARY_MIN_CHARS && user.ai_summary?
       summary, full_formatted, ai_token_count = ai_format(transcript, user, transcription, with_summary: with_summary)
     end
     track_openai_usage(transcription, ai_token_count) if ai_token_count

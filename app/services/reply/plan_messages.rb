@@ -24,7 +24,7 @@ module Reply
       limits = User::TRANSCRIPTION_LIMITS
 
       <<~MSG.strip
-        • *Basic* · #{brl(basic)}/mês: #{limits["basic"]} transcrições por mês
+        • *Basic* · #{brl(basic)}/mês: #{limits["basic"]} transcrições por mês, organizadas com IA
         • *Pacote avulso* · #{brl(AudioPack::PRICE)}: #{AudioPack::CREDITS} transcrições com IA, pagamento único sem assinatura
         • *Pro* · #{brl(pro)}/mês: #{number(limits["pro"])} transcrições por mês, resumo com IA e *Transcrever no chat*
       MSG

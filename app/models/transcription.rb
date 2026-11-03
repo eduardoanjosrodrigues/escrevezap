@@ -82,11 +82,11 @@ class Transcription < ApplicationRecord
     branded?(user_override) ? text + BRANDING_FOOTER : text
   end
 
-  # Quem não é Pro e recebeu uma transcrição formatada está usando a cota de
-  # teste (User::AI_FORMAT_TRIAL_LIMIT). Avisamos só no chat com o bot: na
+  # No Grátis a transcrição formatada usa a cota de teste
+  # (User::AI_FORMAT_TRIAL_LIMIT). Avisamos só no chat com o bot: na
   # conversa com o contato não entra propaganda.
   def ai_format_trial_line(user_override = user)
-    return unless direct? && full_formatted.present? && user_override.present? && !user_override.pro_features?
+    return unless direct? && full_formatted.present? && user_override.present? && user_override.lifetime_quota?
 
     used = [ user_override.ai_formats_used_this_month, User::AI_FORMAT_TRIAL_LIMIT ].min
     "\n\n✨ _Formatado com IA, recurso do Pro: #{used} de #{User::AI_FORMAT_TRIAL_LIMIT} grátis este mês._"

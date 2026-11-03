@@ -50,9 +50,10 @@ module Meta
         example: [ "4" ],
         buttons: [ "Ver planos" ]
       },
-      "continuar_transcrevendo" => {
+      # v2: sem preço no texto, para mudar preço sem reaprovar o template na Meta
+      "continuar_transcrevendo_v2" => {
         body: "Olá! Você já transcreveu {{1}} áudios com o EscreveZap, cerca de {{2}} minutos que não precisou ouvir. 🙌\n\n" \
-              "Quer continuar? O *Basic* tem 100 transcrições por mês por R$ 4,99.",
+              "Quer continuar? O *Basic* tem 100 transcrições por mês, organizadas com IA.",
         example: [ "5", "12" ],
         buttons: [ "Assinar Basic", "Agora não" ]
       }
@@ -63,7 +64,7 @@ module Meta
     end
 
     def continuar_transcrevendo(count, minutes)
-      marketing_template("continuar_transcrevendo", [ count, minutes ], [ "upgrade_basic:winback", "upgrade_dismiss" ])
+      marketing_template("continuar_transcrevendo_v2", [ count, minutes ], [ "upgrade_basic:winback", "upgrade_dismiss" ])
     end
 
     # Template UTILITY "transcrever_no_chat_pausado" (pt_BR, id 1544226850844758),

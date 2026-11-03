@@ -511,7 +511,7 @@
         <div class="mb-6">
           <p class="text-sm font-semibold text-(--color-text-muted) uppercase tracking-wide mb-3">Basic</p>
           <div class="flex items-end gap-1 mb-1">
-            <span class="text-4xl font-extrabold text-(--color-text)">R$4,99</span>
+            <span class="text-4xl font-extrabold text-(--color-text)"><%= Reply::PlanMessages.brl(Subscription::PRICES["basic"]).delete(" ") %></span>
             <span class="text-(--color-text-muted) text-sm mb-1.5">/mês</span>
           </div>
           <p class="text-sm text-(--color-text-muted)">100 transcrições por mês</p>
@@ -519,6 +519,7 @@
         <ul class="space-y-3 flex-1 mb-8">
           <% [
             "Encaminhe áudios e receba o texto",
+            "Texto organizado em parágrafos com IA",
             "Sem marca nas respostas",
             "Teste o Transcrever no chat (20/mês)",
             "Prioridade na fila"

@@ -35,7 +35,7 @@ module HomeContent
     },
     {
       question: "Quanto custa para transcrever áudios do WhatsApp?",
-      answer:   "Você pode testar de graça com 5 áudios, sem cadastro. O plano Basic custa R$ 4,99/mês com 100 transcrições por mês e o plano Pro custa R$ 11,99/mês com 2.000 transcrições, Transcrever no chat e resumo com IA. Se não quiser assinatura, o pacote avulso tem 40 transcrições com IA por R$ 9,99, pagamento único."
+      answer:   "Você pode testar de graça com 5 áudios, sem cadastro. O plano Basic custa R$ 5,99/mês com 100 transcrições por mês, organizadas com IA, e o plano Pro custa R$ 11,99/mês com 2.000 transcrições, Transcrever no chat e resumo com IA. Se não quiser assinatura, o pacote avulso tem 40 transcrições com IA por R$ 9,99, pagamento único."
     },
     {
       question: "Posso cancelar quando quiser?",

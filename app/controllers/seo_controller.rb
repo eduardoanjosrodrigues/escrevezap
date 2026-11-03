@@ -81,8 +81,8 @@ class SeoController < ApplicationController
       ## Planos
 
       - Grátis: R$ 0, 5 áudios para testar (sem cadastro).
-      - Basic: R$ 4,99/mês, 100 transcrições por mês, sem a marca do EscreveZap nas respostas.
-      - Pro: #{Reply::PlanMessages.brl(Subscription::PRICES["pro"])}/mês, 2.000 transcrições por mês, Transcrever no chat, formatação e resumo com IA.
+      - Basic: #{Reply::PlanMessages.brl(Subscription::PRICES["basic"])}/mês, 100 transcrições por mês com formatação por IA, sem a marca do EscreveZap nas respostas.
+      - Pro: #{Reply::PlanMessages.brl(Subscription::PRICES["pro"])}/mês, 2.000 transcrições por mês, Transcrever no chat, formatação, modos de formatação e resumo com IA.
       - Pacote avulso: #{Reply::PlanMessages.brl(AudioPack::PRICE)}, pagamento único, #{AudioPack::CREDITS} transcrições com formatação e resumo com IA, sem assinatura.
 
       ## Páginas
