@@ -9,7 +9,7 @@ class Soniox
   class Error < StandardError; end
 
   API_URL       = "https://api.soniox.com/v1".freeze
-  MODEL         = "stt-async-v5".freeze
+  MODEL         = "stt-async-v6".freeze
   POLL_INTERVAL = 0.5
   POLL_TIMEOUT  = 120 # segundos
 
