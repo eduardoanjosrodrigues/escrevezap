@@ -41,8 +41,8 @@ module Reply
     def offer_plans_from_site
       sleep 0.5.seconds
       Meta::Service.new(recipient: @phone).send_message_with_buttons(
-        "Quer assinar agora? É pelo Pix Automático, direto aqui no WhatsApp.\n\n#{PlanMessages.plans_overview}",
-        PlanMessages::UPGRADE_BUTTONS.map { |id, title| { type: "reply", reply: { id: id, title: title } } }
+        "Quer assinar agora? É pelo Pix, direto aqui no WhatsApp.\n\n#{PlanMessages.plans_overview}",
+        PlanMessages.upgrade_buttons.map { |id, title| { type: "reply", reply: { id: id, title: title } } }
       )
     end
 
@@ -105,8 +105,8 @@ module Reply
       sleep 0.5.seconds
 
       Meta::Service.new(recipient: @phone).send_message_with_buttons(
-        "Quer assinar? É pelo Pix Automático, direto aqui.",
-        PlanMessages::UPGRADE_BUTTONS.map { |id, title| { type: "reply", reply: { id: id, title: title } } }
+        "Quer assinar ou levar um pacote? É pelo Pix, direto aqui.",
+        PlanMessages.upgrade_buttons.map { |id, title| { type: "reply", reply: { id: id, title: title } } }
       )
     end
 

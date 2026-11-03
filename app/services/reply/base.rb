@@ -88,12 +88,13 @@ module Reply
       )
     end
 
-    def send_pix_code(reference_id:, pix_code:, total_amount_cents:, description:)
+    def send_pix_code(reference_id:, pix_code:, total_amount_cents:, description:, **options)
       Meta::Service.new(recipient: @phone).send_pix_code(
         reference_id: reference_id,
         pix_code: pix_code,
         total_amount_cents: total_amount_cents,
-        description: description
+        description: description,
+        **options
       )
     end
   end

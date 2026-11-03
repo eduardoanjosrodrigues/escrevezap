@@ -71,6 +71,8 @@ module Reply
       # (vai para o CHECKOUT_STARTED, ver BotNudgeJob)
       when /\Aupgrade_(basic|pro)(?::([a-z_]+))?\z/
         generate_upgrade_checkout(Regexp.last_match(1), source: Regexp.last_match(2))
+      when /\Abuy_pack(?::([a-z_]+))?\z/
+        generate_pack_checkout(source: Regexp.last_match(1))
       when "upgrade_dismiss"
         send_message(message: "Tudo bem! 👍 Se mudar de ideia, é só me chamar por aqui.")
       when "cancel_subscription"

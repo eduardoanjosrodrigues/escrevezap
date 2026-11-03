@@ -17,7 +17,10 @@ class Subscription < ApplicationRecord
     pro:   "pro"
   }, prefix: :sub
 
-  PRICES = { "basic" => 4.99, "pro" => 19.90 }.freeze
+  # Preços para novas assinaturas. Cada assinatura guarda o seu em `price`
+  # (o valorRec do Pix Automático é fixo), então mudar aqui não afeta quem
+  # já assina.
+  PRICES = { "basic" => 4.99, "pro" => 11.99 }.freeze
 
   # Dias de tolerância após o vencimento antes de expirar (o Inter permite
   # retentativas por até 7 dias - PERMITE_3R_7D).
@@ -39,7 +42,7 @@ class Subscription < ApplicationRecord
   end
 
   def price
-    PRICES.fetch(plan.to_s, PRICES["basic"])
+    self[:price] || PRICES.fetch(plan.to_s, PRICES["basic"])
   end
 
   def cobr_created_for_next_charge?

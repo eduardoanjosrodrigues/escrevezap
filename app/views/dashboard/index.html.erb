@@ -31,7 +31,9 @@
         <p class="text-xs text-(--color-text-muted) mb-1">Transcrições este mês</p>
         <p class="text-3xl font-bold text-(--color-brand)"><%= @month_count %></p>
         <p class="text-xs text-(--color-text-subtle) mt-1">
-          <% if current_user.lifetime_quota? %>
+          <% if current_user.on_pack? %>
+            <%= current_user.transcriptions_used_for_display %> de <%= current_user.transcription_limit %> transcrições do pacote usadas
+          <% elsif current_user.lifetime_quota? %>
             <%= current_user.transcriptions_used_for_display %> de <%= current_user.transcription_limit %> transcrições grátis usadas
           <% else %>
             de <%= current_user.transcription_limit %> no plano <%= current_user.plan %>

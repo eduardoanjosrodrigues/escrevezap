@@ -44,7 +44,10 @@ class MissedAudiosNoticeJob < BotNudgeJob
   end
 
   def text(user, missed)
-    limit = user.lifetime_quota? ? "seus áudios grátis acabaram" : "as transcrições do seu plano acabaram este mês"
+    limit = if user.on_pack? then "seu pacote de transcrições acabou"
+            elsif user.lifetime_quota? then "seus áudios grátis acabaram"
+            else "as transcrições do seu plano acabaram este mês"
+            end
     "Nos últimos dias, *#{missed} áudios* que chegaram no seu WhatsApp não foram transcritos porque #{limit}.\n\n" \
       "Para voltar a receber tudo em texto:\n\n#{Reply::PlanMessages.plans_overview}"
   end

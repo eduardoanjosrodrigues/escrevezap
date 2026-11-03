@@ -16,7 +16,7 @@ class FormattingStyleController < ApplicationController
   private
 
   def require_pro!
-    unless current_user.pro?
+    unless current_user.pro_features?
       redirect_to profile_path, alert: "O modelo de formatação está disponível apenas no plano Pro."
     end
   end

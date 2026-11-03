@@ -29,7 +29,7 @@ class PixReminderJob < BotNudgeJob
       meta.send_message("Seu Pix da assinatura *#{plan.capitalize}* ainda está pendente. " \
                         "Se quiser concluir, o código está aqui embaixo 👇 Assim que pagar, o plano é ativado na hora.")
       meta.send_pix_code(reference_id: txid, pix_code: pix_code,
-                         total_amount_cents: (Subscription::PRICES.fetch(plan, Subscription::PRICES["basic"]) * 100).round,
+                         total_amount_cents: (subscription.price * 100).round,
                          description: "Assinatura EscreveZap - #{plan.capitalize}")
     else
       meta.send_message_with_buttons("Seu Pix da assinatura *#{plan.capitalize}* não foi concluído. Quer gerar um novo?",

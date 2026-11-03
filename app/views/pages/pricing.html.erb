@@ -37,7 +37,7 @@
       <div>
         <h2 class="text-base font-bold text-(--color-text)"><%= t("pages.pricing.basic.name") %></h2>
         <div class="mt-3 flex items-end gap-1">
-          <span class="text-4xl font-bold text-(--color-text)">R$5<span class="text-xl">,99</span></span>
+          <span class="text-4xl font-bold text-(--color-text)"><%= Reply::PlanMessages.brl(Subscription::PRICES["basic"]).delete(" ") %></span>
           <span class="text-sm text-(--color-text-muted) mb-1">/<%= t("pages.pricing.month") %></span>
         </div>
         <p class="mt-2 text-sm text-(--color-text-muted)"><%= t("pages.pricing.basic.description") %></p>
@@ -63,7 +63,7 @@
       <div>
         <h2 class="text-base font-bold text-white"><%= t("pages.pricing.pro.name") %></h2>
         <div class="mt-3 flex items-end gap-1">
-          <span class="text-4xl font-bold text-white">R$19<span class="text-xl">,90</span></span>
+          <span class="text-4xl font-bold text-white"><%= Reply::PlanMessages.brl(Subscription::PRICES["pro"]).delete(" ") %></span>
           <span class="text-sm text-white/70 mb-1">/<%= t("pages.pricing.month") %></span>
         </div>
         <p class="mt-2 text-sm text-white/80"><%= t("pages.pricing.pro.description") %></p>
@@ -81,4 +81,8 @@
             class: "mt-6 block text-center bg-white text-(--color-brand) font-semibold px-4 py-2.5 rounded-xl text-sm hover:bg-(--color-brand-light) transition-colors" %>
     </div>
   </div>
+
+  <p class="mt-8 text-center text-sm text-(--color-text-muted)">
+    <%= t("pages.pricing.pack_html", credits: AudioPack::CREDITS, price: Reply::PlanMessages.brl(AudioPack::PRICE).delete(" ")) %>
+  </p>
 </div>

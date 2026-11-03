@@ -97,46 +97,36 @@ Simple database events first.
 
 # Plans
 
-The product currently supports:
+The product currently supports (source of truth: `User::TRANSCRIPTION_LIMITS`,
+`Subscription::PRICES`, `AudioPack`):
 
 ## Free
 
-- 20 transcriptions per month
-- Deepgram transcription
-- lightweight branding
-- no AI formatting
-- standard queue priority
+- 5 transcriptions in total (lifetime, not monthly)
+- 5 AI formattings to try
+- audios up to 5 min
 
 ## Basic
 
-Price:
-
-```txt
-R$5,99/month
-```
-
-Features:
-
-- 500 transcriptions per month
-- no AI formatting
+- R$4,99/month, 100 transcriptions per month
+- 5 AI formattings per month to try
 - no branding
-- higher queue priority
+
+## Audio pack (one-time)
+
+- R$9,99, one-time Pix (no subscription), 40 transcriptions that never expire
+- transcribes like Pro (AI formatting, audios up to 25 min) while it has credits
+- unused free/pack credits carry over into a new pack
 
 ## Pro
 
-Price:
-
-```txt
-R$19,90/month
-```
-
-Features:
-
-- 2,000 transcriptions per month
-- AI formatting
-- formatting modes
+- R$11,99/month, 2,000 transcriptions per month
+- AI formatting and summaries, formatting modes, "Transcrever no chat"
 - no branding
-- highest queue priority
+
+Each subscription stores its own `price`: price changes only apply to new
+subscriptions (Pix Automático is authorized with a fixed `valorRec`).
+Subscribers from before Nov/2026 keep paying R$19,90 for Pro.
 
 ---
 

@@ -15,7 +15,7 @@ module Reply
       if @user.transcription_limit_reached?(excluding: transcription, credits: transcription.credits)
         remaining = @user.transcription_credits_remaining(excluding: transcription)
         transcription.update!(status: :failed, error_message: "Créditos insuficientes na confirmação (#{transcription.credits} > #{remaining})")
-        send_message(message: "⚠️ Esse áudio precisa de *#{transcription.credits} créditos*, mas você só tem #{remaining} disponíveis este mês.")
+        send_message(message: "⚠️ Esse áudio precisa de *#{transcription.credits} créditos*, mas você só tem #{remaining} disponíveis #{@user.on_pack? ? "no seu pacote" : "este mês"}.")
         return
       end
 

@@ -1,8 +1,5 @@
 module Admin
   class DashboardController < Admin::BaseController
-    BASIC_PRICE = Subscription::PRICES["basic"]
-    PRO_PRICE   = Subscription::PRICES["pro"]
-
     def index
       today       = Date.current
       month_start = today.beginning_of_month
@@ -22,7 +19,13 @@ module Admin
       @paid_count  = @basic_count + @pro_count
 
       # ── MRR ─────────────────────────────────────────────────────────────
-      @mrr = (@basic_count * BASIC_PRICE) + (@pro_count * PRO_PRICE)
+      # Pelo preço de cada assinatura (quem assinou antes paga o preço antigo)
+      @mrr = Subscription.where(status: %w[active past_due]).sum(&:price)
+
+      # ── Pacotes avulsos ─────────────────────────────────────────────────
+      packs_this_month      = AudioPack.paid.where(paid_at: month_start..)
+      @packs_count          = packs_this_month.count
+      @packs_revenue        = packs_this_month.sum(:price)
 
       # ── Conversion rate ─────────────────────────────────────────────────
       @conversion_rate = @total_users > 0 ? (@paid_count.to_f / @total_users * 100).round(1) : 0.0

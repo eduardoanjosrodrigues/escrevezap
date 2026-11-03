@@ -24,7 +24,14 @@ module Reply
 
       days_label = days_left == 1 ? "falta 1 dia" : "faltam #{days_left} dias"
 
-      billing_text = if @user.lifetime_quota?
+      billing_text = if @user.on_pack?
+        <<~MSG
+          📊 *Seu plano e uso*
+
+          *   *Plano:* Pacote avulso
+          *   *Transcrições usadas:* #{used} de #{limit} (sem prazo para usar)
+        MSG
+      elsif @user.lifetime_quota?
         <<~MSG
           📊 *Seu plano e uso*
 
@@ -45,8 +52,10 @@ module Reply
       sleep 0.5.seconds
 
       rows = []
-      rows << { id: "upgrade_basic", title: "Assinar Basic (R$4,99)", description: "100 transcrições/mês" } if plan != "basic"
-      rows << { id: "upgrade_pro", title: "Assinar Pro (R$19,90)", description: "2.000/mês + Transcrever no chat + IA" } if plan != "pro"
+      prices = Subscription::PRICES
+      rows << { id: "upgrade_basic", title: "Assinar Basic (#{PlanMessages.brl(prices["basic"])})", description: "#{User::TRANSCRIPTION_LIMITS["basic"]} transcrições/mês" } if plan != "basic"
+      rows << { id: "buy_pack", title: "Pacote (#{PlanMessages.brl(AudioPack::PRICE)})", description: "#{AudioPack::CREDITS} transcrições com IA, pagamento único" } if @user.free?
+      rows << { id: "upgrade_pro", title: "Assinar Pro (#{PlanMessages.brl(prices["pro"])})", description: "2.000/mês + Transcrever no chat + IA" } if plan != "pro"
       rows << { id: "cancel_subscription", title: "Cancelar Assinatura", description: "Voltar ao plano gratuito" } if @user.subscription&.active_or_trialing?
       rows << { id: "cancel_connection", title: "❌ Voltar ao Menu", description: "Voltar para o menu principal" }
 
@@ -78,6 +87,46 @@ module Reply
       @user.update!(conversation_state: @current_conversation_state)
 
       send_message(message: "Para prosseguirmos com a sua assinatura via Pix Automático, preciso de alguns dados para a emissão da cobrança.\n\nPor favor, digite seu *CPF* ou *CNPJ* (apenas números):")
+    end
+
+    # Pacote avulso: Pix comum, sem CPF/nome nem autorização recorrente.
+    def generate_pack_checkout(source: nil)
+      if @user.active_subscriber?
+        send_message(message: "⚠️ Você já tem uma assinatura ativa, então não precisa do pacote avulso.")
+        show_billing
+        return
+      end
+
+      UsageEvent.track(user: @user, event_type: UsageEvent::CHECKOUT_STARTED,
+                       metadata: { plan: "pack", from_plan: @user.plan, out_of_credits: @user.transcription_credits_remaining.zero?,
+                                   source: source }.compact)
+
+      price = AudioPack::PRICE
+      cob = Inter::PixService.generate_charge(amount: price, description: "EscreveZap - Pacote de transcrições",
+                                              expiration: AudioPack::PIX_EXPIRATION)
+      pack = @user.audio_packs.create!(inter_txid: cob["txid"], price: price, credits: AudioPack::CREDITS)
+
+      UsageEvent.track(user: @user, event_type: UsageEvent::PIX_GENERATED,
+                       metadata: { plan: "pack", audio_pack_id: pack.id })
+
+      send_pix_code(
+        reference_id: cob["txid"],
+        pix_code: cob["pixCopiaECola"],
+        total_amount_cents: (price * 100).round,
+        description: "Pacote EscreveZap - #{AudioPack::CREDITS} transcrições",
+        body_text: "Pacote de #{AudioPack::CREDITS} transcrições com IA"
+      )
+      sleep 1.second
+      send_message(message: "Pagamento único, sem assinatura. Assim que o Pix cair, eu te aviso aqui e o pacote é liberado na hora. " \
+                            "O código vale por 24 horas.")
+    rescue => e
+      Sentry.capture_exception(e)
+      UsageEvent.track(user: @user, event_type: UsageEvent::PIX_FAILED,
+                       metadata: { plan: "pack", error: "#{e.class}: #{e.message}".truncate(200) })
+      raise e unless Rails.env.production?
+
+      Rails.logger.error "[Reply::Billing#generate_pack_checkout] #{e.class} #{e.message}"
+      send_message(message: "⚠️ Não consegui gerar o Pix agora. Por favor, tente novamente em alguns minutos.")
     end
 
     def process_billing_cpf(message)
@@ -119,6 +168,7 @@ module Reply
         subscription.update!(
           provider: "inter",
           plan: plan,
+          price: amount,
           status: :inactive,
           inter_recorrencia_id: result[:id_recorrencia],
           inter_txid: result[:txid],

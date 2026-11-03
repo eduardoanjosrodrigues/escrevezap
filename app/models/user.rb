@@ -3,6 +3,7 @@ class User < ApplicationRecord
 
   has_one :waha_session, dependent: :destroy
   has_one :subscription, dependent: :destroy
+  has_many :audio_packs, dependent: :destroy
   has_many :whatsapp_messages, dependent: :nullify
   has_one_attached :avatar
 
@@ -116,19 +117,42 @@ class User < ApplicationRecord
   end
 
   def transcription_limit
+    return current_pack.credits if on_pack?
+
     TRANSCRIPTION_LIMITS.fetch(plan, TRANSCRIPTION_LIMITS["free"])
   end
 
-  # O limite do Grátis é na vida (não renova); os pagos renovam todo mês.
-  def lifetime_quota?
-    free?
+  # Último pacote avulso pago (ver AudioPack)
+  def current_pack
+    audio_packs.paid.order(paid_at: :desc).first
   end
 
-  # Transcrições que contam para o limite do plano: todas (Grátis) ou do mês.
+  # Grátis que comprou pacote: a cota passa a ser a do pacote, mesmo depois
+  # de esgotado (aí oferecemos outro pacote ou assinatura).
+  def on_pack?
+    free? && current_pack.present?
+  end
+
+  # Recursos do Pro: assinantes Pro e quem está num pacote avulso.
+  def pro_features?
+    pro? || on_pack?
+  end
+
+  # O limite do Grátis é na vida (não renova); os pagos renovam todo mês;
+  # o pacote conta desde o pagamento.
+  def lifetime_quota?
+    free? && !on_pack?
+  end
+
+  # Transcrições que contam para o limite do plano: todas (Grátis), do mês
+  # (assinantes) ou desde a compra do pacote.
   def transcriptions_used(excluding: nil)
     return 0 if waha_session.nil?
 
-    if lifetime_quota?
+    if on_pack?
+      waha_session.quota_transcriptions(excluding: excluding)
+                  .where(transcriptions: { created_at: current_pack.paid_at.. }).sum(:credits)
+    elsif lifetime_quota?
       waha_session.lifetime_transcription_count(excluding: excluding)
     else
       waha_session.monthly_transcription_count(excluding: excluding)
@@ -136,6 +160,8 @@ class User < ApplicationRecord
   end
 
   def max_audio_duration
+    return AUDIO_DURATION_LIMITS["pro"] if on_pack?
+
     AUDIO_DURATION_LIMITS.fetch(plan, AUDIO_DURATION_LIMITS["free"])
   end
 
@@ -190,7 +216,7 @@ class User < ApplicationRecord
   end
 
   def can_ai_format?(excluding: nil)
-    pro? || ai_formats_used_this_month(excluding: excluding) < AI_FORMAT_TRIAL_LIMIT
+    pro_features? || ai_formats_used_this_month(excluding: excluding) < AI_FORMAT_TRIAL_LIMIT
   end
 
   def active_subscriber?

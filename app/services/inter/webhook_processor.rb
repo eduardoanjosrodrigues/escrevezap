@@ -26,6 +26,12 @@ module Inter
       
       log_info "PIX recebido - tx_id: #{tx_id}, idRecorrencia: #{id_rec}, valor: R$ #{data[:amount]}"
 
+      # Pacote avulso (cob simples, sem recorrência)
+      if tx_id.present? && (pack = AudioPack.find_by(inter_txid: tx_id))
+        pack.mark_paid!
+        return
+      end
+
       # Pagamento de um ciclo (cobr) - o polling diário também detecta, então é idempotente
       if tx_id.present? && (cycle_subscription = Subscription.find_by(inter_cobr_txid: tx_id))
         RecurringBilling.new(cycle_subscription).mark_cycle_paid!

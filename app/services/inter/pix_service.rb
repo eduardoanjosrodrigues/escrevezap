@@ -12,7 +12,7 @@ module Inter
       service.check_webhook
     end
 
-    def self.generate_charge(amount:, description: nil, payer_cpf: nil, payer_cnpj: nil, payer_name: nil)
+    def self.generate_charge(amount:, description: nil, payer_cpf: nil, payer_cnpj: nil, payer_name: nil, expiration: 3600)
       service = Service.new
 
       payer_info = {}
@@ -23,7 +23,8 @@ module Inter
       service.generate_pix_charge(
         amount: amount,
         description: description,
-        payer_info: payer_info
+        payer_info: payer_info,
+        expiration: expiration
       )
     end
 

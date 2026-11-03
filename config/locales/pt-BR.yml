@@ -385,6 +385,7 @@ pt-BR:
       popular:  "Popular"
       cta_free: "Começar grátis"
       cta_paid: "Assinar agora"
+      pack_html: "Não quer assinatura? Leve um <strong>pacote de %{credits} transcrições com IA</strong> por %{price}, pagamento único pelo Pix."
       free:
         name:        "Grátis"
         description: "Para conhecer o produto."

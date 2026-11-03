@@ -108,7 +108,8 @@ module SeoHelper
       "offers"          => [
         { "@type" => "Offer", "name" => "Gratuito", "price" => "0",     "priceCurrency" => "BRL" },
         { "@type" => "Offer", "name" => "Basic",    "price" => "4.99",  "priceCurrency" => "BRL" },
-        { "@type" => "Offer", "name" => "Pro",      "price" => "19.90", "priceCurrency" => "BRL" }
+        { "@type" => "Offer", "name" => "Pro",      "price" => format("%.2f", Subscription::PRICES["pro"]), "priceCurrency" => "BRL" },
+        { "@type" => "Offer", "name" => "Pacote avulso", "price" => format("%.2f", AudioPack::PRICE), "priceCurrency" => "BRL" }
       ]
     )
   end

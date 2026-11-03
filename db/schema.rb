@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_17_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_02_120100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -40,6 +40,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_120000) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "audio_packs", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "credits", null: false
+    t.string "inter_txid", null: false
+    t.datetime "paid_at"
+    t.decimal "price", precision: 8, scale: 2, null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["inter_txid"], name: "index_audio_packs_on_inter_txid", unique: true
+    t.index ["user_id", "paid_at"], name: "index_audio_packs_on_user_id_and_paid_at"
+    t.index ["user_id"], name: "index_audio_packs_on_user_id"
   end
 
   create_table "external_events", force: :cascade do |t|
@@ -115,6 +129,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_120000) do
     t.string "payer_name"
     t.string "pending_plan"
     t.string "plan", default: "basic", null: false
+    t.decimal "price", precision: 8, scale: 2
     t.string "provider", default: "inter", null: false
     t.string "status", default: "inactive", null: false
     t.datetime "trial_ends_at"
@@ -258,6 +273,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_120000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "audio_packs", "users"
   add_foreign_key "monitored_contacts", "waha_sessions"
   add_foreign_key "provider_usages", "transcriptions"
   add_foreign_key "sign_in_tokens", "users"

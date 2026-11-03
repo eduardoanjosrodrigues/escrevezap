@@ -19,6 +19,7 @@ class UsageEvent < ApplicationRecord
   PIX_GENERATED          = "pix_generated"
   PIX_FAILED             = "pix_failed"
   SUBSCRIPTION_ACTIVATED = "subscription_activated"
+  PACK_PURCHASED         = "pack_purchased"
 
   scope :this_month, -> { where(occurred_at: Time.current.beginning_of_month..) }
   scope :last_30_days, -> { where(occurred_at: 30.days.ago..) }

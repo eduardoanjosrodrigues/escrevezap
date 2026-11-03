@@ -55,7 +55,7 @@ module Inter
     end
 
     # Gera código PIX para cobrança
-    def generate_pix_charge(amount:, description: nil, payer_info: {}, loc_id: nil)
+    def generate_pix_charge(amount:, description: nil, payer_info: {}, loc_id: nil, expiration: 3600)
       log_info "Iniciando processo de geração de código PIX..."
 
       begin
@@ -68,7 +68,7 @@ module Inter
         log_info "Transaction ID gerado: #{txid}"
         log_info "Valor da cobrança: R$ #{amount}"
 
-        body = build_pix_charge_body(amount, description, payer_info, loc_id)
+        body = build_pix_charge_body(amount, description, payer_info, loc_id, expiration)
 
         log_info "Dados da cobrança: #{body.to_json}"
 
@@ -291,10 +291,10 @@ module Inter
 
     private
 
-    def build_pix_charge_body(amount, description, payer_info, loc_id = nil)
+    def build_pix_charge_body(amount, description, payer_info, loc_id = nil, expiration = 3600)
       body = {
         calendario: {
-          expiracao: 3600  # 1 hora de expiração
+          expiracao: expiration  # segundos (padrão: 1 hora)
         },
         valor: {
           original: format("%.2f", amount.to_f),

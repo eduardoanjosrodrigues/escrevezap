@@ -239,7 +239,7 @@ module Meta
     # end
 
     def send_pix_code(
-      reference_id:, pix_code:, total_amount_cents:, description:
+      reference_id:, pix_code:, total_amount_cents:, description:, body_text: "Pagamento do Plano Escolhido"
     )
       payload = {
         messaging_product: "whatsapp",
@@ -249,7 +249,7 @@ module Meta
         "interactive": {
           "type": "order_details",
           "body": {
-            "text": "Pagamento do Plano Escolhido" # "Plano de Restauração Diamante"
+            "text": body_text
           },
           "action": {
             "name": "review_and_pay",

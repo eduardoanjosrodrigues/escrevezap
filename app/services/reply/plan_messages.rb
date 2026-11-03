@@ -5,13 +5,17 @@ module Reply
   module PlanMessages
     module_function
 
-    UPGRADE_BUTTONS = [
-      [ "upgrade_basic", "Basic · R$ 4,99" ],
-      [ "upgrade_pro",   "Pro · R$ 19,90" ]
-    ].freeze
-
     def brl(value)
       format("R$ %.2f", value).tr(".", ",")
+    end
+
+    # Grátis e pacote: Basic, pacote avulso e Pro (o WhatsApp aceita até 3 botões)
+    def upgrade_buttons
+      [
+        [ "upgrade_basic", "Basic · #{brl(Subscription::PRICES["basic"])}" ],
+        [ "buy_pack",      "#{AudioPack::CREDITS} áudios · #{brl(AudioPack::PRICE)}" ],
+        [ "upgrade_pro",   "Pro · #{brl(Subscription::PRICES["pro"])}" ]
+      ]
     end
 
     def plans_overview
@@ -21,6 +25,7 @@ module Reply
 
       <<~MSG.strip
         • *Basic* · #{brl(basic)}/mês: #{limits["basic"]} transcrições por mês
+        • *Pacote avulso* · #{brl(AudioPack::PRICE)}: #{AudioPack::CREDITS} transcrições com IA, pagamento único sem assinatura
         • *Pro* · #{brl(pro)}/mês: #{number(limits["pro"])} transcrições por mês, resumo com IA e *Transcrever no chat*
       MSG
     end
@@ -35,7 +40,9 @@ module Reply
 
     # Saldo baixo (antes de acabar)
     def quota_low(user, remaining)
-      if user.lifetime_quota?
+      if user.on_pack?
+        "Restam *#{remaining} transcrições* do seu pacote."
+      elsif user.lifetime_quota?
         "Restam *#{remaining} áudios grátis* para você testar. Depois disso, o Basic sai por " \
           "#{brl(Subscription::PRICES["basic"])}/mês com #{User::TRANSCRIPTION_LIMITS["basic"]} transcrições."
       else
@@ -47,14 +54,17 @@ module Reply
     # [texto, botões] quando o saldo acaba (na última transcrição ou ao tentar
     # passar do limite).
     def quota_exhausted(user, just_used_last: false)
-      if user.lifetime_quota?
+      if user.on_pack?
+        intro = just_used_last ? "Essa foi a última transcrição do seu pacote. 🙌" : "Você já usou as #{user.transcription_limit} transcrições do seu pacote. 🙌"
+        [ "#{intro}\n\nPara continuar transcrevendo, escolha uma opção:\n\n#{plans_overview}", upgrade_buttons ]
+      elsif user.lifetime_quota?
         intro = just_used_last ? "Esse foi seu último áudio grátis. 🙌" : "Você já usou seus #{user.transcription_limit} áudios grátis. 🙌"
-        [ "#{intro}\n\nPara continuar transcrevendo, escolha um plano:\n\n#{plans_overview}", UPGRADE_BUTTONS ]
+        [ "#{intro}\n\nPara continuar transcrevendo, escolha um plano:\n\n#{plans_overview}", upgrade_buttons ]
       elsif user.basic?
         text = "Você usou as #{user.transcription_limit} transcrições do Basic este mês. Elas renovam em " \
                "#{renewal_date(user).strftime("%d/%m")}.\n\nPrecisa de mais agora? O *Pro* tem " \
                "#{number(User::TRANSCRIPTION_LIMITS["pro"])} por mês, por #{brl(Subscription::PRICES["pro"])}."
-        [ text, [ UPGRADE_BUTTONS.last ] ]
+        [ text, [ upgrade_buttons.last ] ]
       else
         [ "Você usou as #{number(user.transcription_limit)} transcrições do seu plano este mês. " \
           "Elas renovam em #{renewal_date(user).strftime("%d/%m")}.", [] ]

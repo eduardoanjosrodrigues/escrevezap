@@ -287,7 +287,7 @@
     </div>
 
     <p class="text-center text-sm text-(--color-text-muted) mt-8">
-      Pro por apenas <strong class="text-(--color-brand)">R$19,90/mês</strong>. Menos que um café por semana.
+      Pro por apenas <strong class="text-(--color-brand)"><%= Reply::PlanMessages.brl(Subscription::PRICES["pro"]).delete(" ") %>/mês</strong>. Menos que um café por semana.
     </p>
   </div>
 </section>
@@ -548,7 +548,7 @@
         <div class="mb-6">
           <p class="text-sm font-semibold text-white/70 uppercase tracking-wide mb-3">Pro</p>
           <div class="flex items-end gap-1 mb-1">
-            <span class="text-4xl font-extrabold text-white">R$19,90</span>
+            <span class="text-4xl font-extrabold text-white"><%= Reply::PlanMessages.brl(Subscription::PRICES["pro"]).delete(" ") %></span>
             <span class="text-white/70 text-sm mb-1.5">/mês</span>
           </div>
           <p class="text-sm text-white/70">2.000 transcrições por mês</p>
@@ -573,6 +573,11 @@
       </div>
 
     </div>
+
+    <p class="text-center text-sm text-(--color-text-muted) mt-8">
+      Não quer assinatura? Leve um <strong class="text-(--color-text)">pacote de <%= AudioPack::CREDITS %> transcrições com IA</strong>
+      por <%= Reply::PlanMessages.brl(AudioPack::PRICE).delete(" ") %>, pagamento único pelo Pix.
+    </p>
 
   </div>
 </section>

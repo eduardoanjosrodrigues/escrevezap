@@ -298,7 +298,7 @@ class TranscribeAudioJob < ApplicationJob
     metadata = { transcription_id: transcription.id, duration: transcriber&.duration, plan: user.plan, engine: engine }
     TrackUsageJob.perform_later(user_id: user.id, event_type: UsageEvent::TRANSCRIPTION_COMPLETED, metadata: metadata)
     if ai_token_count
-      TrackUsageJob.perform_later(user_id: user.id, event_type: UsageEvent::AI_FORMAT_COMPLETED, metadata: { transcription_id: transcription.id, tokens: ai_token_count, plan: user.plan, trial: !user.pro? })
+      TrackUsageJob.perform_later(user_id: user.id, event_type: UsageEvent::AI_FORMAT_COMPLETED, metadata: { transcription_id: transcription.id, tokens: ai_token_count, plan: user.plan, trial: !user.pro_features? })
     end
   rescue => e
     Rails.logger.error "[TranscribeAudioJob] Erro ao processar transcription #{transcription.id} (stage=#{stage}): #{e.message}"
@@ -582,12 +582,12 @@ class TranscribeAudioJob < ApplicationJob
     minutes     = (duration / 60.0).ceil
     max_minutes = user.max_audio_duration / 60
 
-    if transcription.direct? && !user.free?
+    if transcription.direct? && !user.lifetime_quota?
       ask_long_audio_confirmation(transcription, channel, user, duration, minutes)
       return
     end
 
-    text = if user.free?
+    text = if user.lifetime_quota?
       "⏱️ *Esse áudio tem #{minutes} min.*\n\n" \
       "No plano Grátis eu transcrevo áudios de até #{max_minutes} min. " \
       "Nos planos Basic e Pro o limite é de 25 min — e áudios maiores podem ser transcritos usando créditos extras.\n\n" \
@@ -616,7 +616,7 @@ class TranscribeAudioJob < ApplicationJob
 
     if credits > remaining
       channel.send_text("⏱️ *Esse áudio tem #{minutes} min* e custaria *#{credits} créditos* " \
-                        "(1 a cada 25 min), mas você só tem #{remaining} disponíveis este mês.")
+                        "(1 a cada 25 min), mas você só tem #{remaining} disponíveis #{user.on_pack? ? "no seu pacote" : "este mês"}.")
       fail_transcription!(transcription, "Créditos insuficientes para áudio de #{minutes} min (#{credits} > #{remaining})")
       return
     end
@@ -625,7 +625,7 @@ class TranscribeAudioJob < ApplicationJob
     channel.send_buttons(
       "⏱️ *Esse áudio tem #{minutes} min* — acima do limite de 25 min por áudio.\n\n" \
       "Posso transcrever usando *#{credits} créditos* do seu plano (1 a cada 25 min). " \
-      "Você tem #{remaining} disponíveis este mês.",
+      "Você tem #{remaining} disponíveis #{user.on_pack? ? "no seu pacote" : "este mês"}.",
       [ [ "long_audio_confirm:#{transcription.id}", "Transcrever" ], [ "long_audio_cancel:#{transcription.id}", "Cancelar" ] ]
     )
 

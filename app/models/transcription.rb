@@ -86,7 +86,7 @@ class Transcription < ApplicationRecord
   # teste (User::AI_FORMAT_TRIAL_LIMIT). Avisamos só no chat com o bot: na
   # conversa com o contato não entra propaganda.
   def ai_format_trial_line(user_override = user)
-    return unless direct? && full_formatted.present? && user_override.present? && !user_override.pro?
+    return unless direct? && full_formatted.present? && user_override.present? && !user_override.pro_features?
 
     used = [ user_override.ai_formats_used_this_month, User::AI_FORMAT_TRIAL_LIMIT ].min
     "\n\n✨ _Formatado com IA, recurso do Pro: #{used} de #{User::AI_FORMAT_TRIAL_LIMIT} grátis este mês._"

@@ -97,6 +97,8 @@ class TranscriptionFollowUpJob < ApplicationJob
   end
 
   def period
+    return "pack-#{@user.current_pack.id}" if @user.on_pack?
+
     @user.lifetime_quota? ? "lifetime" : Time.current.strftime("%Y-%m")
   end
 
