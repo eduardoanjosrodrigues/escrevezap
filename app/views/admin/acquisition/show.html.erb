@@ -7,18 +7,37 @@
     <p class="text-sm text-(--color-text-muted)">
       Funil a partir do primeiro contato com o bot. Visitas e cliques no site ficam no Umami (eventos <span class="font-mono">cta-whatsapp</span>).
     </p>
-    <div class="inline-flex rounded-lg border border-(--color-border) overflow-hidden text-sm">
-      <% [["7", "7 dias"], ["30", "30 dias"], ["90", "90 dias"], ["all", "Tudo"]].each do |value, label| %>
-        <%= link_to label, admin_acquisition_path(period: value, channel: @channel),
-              class: "px-3 py-1.5 transition-colors #{@period == value ? 'bg-(--color-brand) text-white' : 'bg-(--color-surface) text-(--color-text-muted) hover:bg-(--color-surface-muted)'}" %>
-      <% end %>
+    <div class="flex flex-wrap gap-2">
+      <div class="inline-flex rounded-lg border border-(--color-border) overflow-hidden text-sm">
+        <% [[nil, "Todos"], *Admin::AcquisitionController::MODES.to_a].each do |value, label| %>
+          <%= link_to label, admin_acquisition_path(period: @period, channel: @channel, mode: value),
+                class: "px-3 py-1.5 transition-colors #{@mode == value ? 'bg-(--color-brand) text-white' : 'bg-(--color-surface) text-(--color-text-muted) hover:bg-(--color-surface-muted)'}" %>
+        <% end %>
+      </div>
+      <div class="inline-flex rounded-lg border border-(--color-border) overflow-hidden text-sm">
+        <% [["7", "7 dias"], ["30", "30 dias"], ["90", "90 dias"], ["all", "Tudo"]].each do |value, label| %>
+          <%= link_to label, admin_acquisition_path(period: value, channel: @channel, mode: @mode),
+                class: "px-3 py-1.5 transition-colors #{@period == value ? 'bg-(--color-brand) text-white' : 'bg-(--color-surface) text-(--color-text-muted) hover:bg-(--color-surface-muted)'}" %>
+        <% end %>
+      </div>
     </div>
   </div>
+
+  <% if @mode %>
+    <div class="rounded-xl border border-(--color-border) bg-(--color-surface-muted) px-5 py-3 text-sm text-(--color-text)">
+      <% if @mode == "direct" %>
+        Só quem <span class="font-semibold">encaminhou áudio</span> ao bot: transcrições, retorno e pagamento contam só os áudios encaminhados.
+      <% else %>
+        Só quem <span class="font-semibold">reagiu a áudio</span> no WhatsApp conectado: transcrições, retorno e pagamento contam só as reações.
+      <% end %>
+      Contatos que nunca transcreveram ficam de fora, então "Primeiro contato" e "Transcreveram" são iguais.
+    </div>
+  <% end %>
 
   <% if @channel %>
     <div class="flex items-center gap-3 rounded-xl border border-(--color-border) bg-(--color-surface-muted) px-5 py-3 text-sm">
       <span class="text-(--color-text)">Filtrando pelo canal <span class="font-mono font-semibold"><%= @channel %></span></span>
-      <%= link_to "Limpar filtro", admin_acquisition_path(period: @period), class: "text-(--color-brand) hover:underline" %>
+      <%= link_to "Limpar filtro", admin_acquisition_path(period: @period, mode: @mode), class: "text-(--color-brand) hover:underline" %>
     </div>
   <% end %>
 
@@ -91,8 +110,11 @@
           hint: "home, precos, seo-*, blog, ferramenta… e direto (sem código: contato compartilhado ou áudio direto)" %>
     <%= render "funnel_table", title: "Por canal", rows: @by_channel,
           hint: "utm_campaign/utm_source da primeira visita, ou buscador/rede social de onde veio; — = acesso direto. Clique para filtrar a página",
-          link_label: ->(channel) { admin_acquisition_path(period: @period, channel: channel) } %>
+          link_label: ->(channel) { admin_acquisition_path(period: @period, channel: channel, mode: @mode) } %>
   </div>
+
+  <%= render "funnel_table", title: "Por modo de uso", rows: @by_usage,
+        hint: "encaminha = áudios encaminhados ao bot; reage = reação a áudios no WhatsApp conectado (inclui áudios de terceiros, então o volume não é comparável)" %>
 
   <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
     <%= render "funnel_table", title: "Por estado", rows: @by_state,
@@ -118,6 +140,7 @@
             <th class="px-5 py-3 text-left text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Botão</th>
             <th class="px-5 py-3 text-left text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Canal</th>
             <th class="px-5 py-3 text-left text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">DDD</th>
+            <th class="px-5 py-3 text-left text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Modo</th>
             <th class="px-5 py-3 text-left text-xs font-medium text-(--color-text-muted) uppercase tracking-wide">Status</th>
           </tr>
         </thead>
@@ -129,6 +152,7 @@
               <td class="px-5 py-2.5 font-mono text-xs"><%= r[:ref] %></td>
               <td class="px-5 py-2.5 font-mono text-xs"><%= r[:channel] %></td>
               <td class="px-5 py-2.5 font-mono text-xs whitespace-nowrap"><%= r[:ddd] == "—" ? "—" : "#{r[:ddd]} · #{r[:state]}" %></td>
+              <td class="px-5 py-2.5 text-xs text-(--color-text-muted) whitespace-nowrap"><%= r[:usage] %></td>
               <td class="px-5 py-2.5 text-xs">
                 <% if r[:paid] %>
                   <span class="px-2 py-0.5 rounded-full bg-(--color-brand) text-white font-semibold"><%= r[:plan].capitalize %></span>
