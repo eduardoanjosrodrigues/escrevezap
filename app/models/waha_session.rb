@@ -71,6 +71,29 @@ class WahaSession < ApplicationRecord
     session
   end
 
+  # Um número de WhatsApp = uma conta. Quem começou pelo bot já tem uma sessão
+  # com este waha_chat_id (conta "phone"); ao conectar o mesmo WhatsApp por
+  # outra conta (ex.: Google no site), a conta antiga é unida a esta, que é a
+  # logada no site. A sessão antiga, se chegou a rodar no Waha, é apagada lá.
+  def absorb_duplicate_sessions!
+    return if waha_chat_id.blank?
+
+    WahaSession.where(waha_chat_id: waha_chat_id).where.not(id: id).find_each do |other|
+      user.absorb!(other.user)
+
+      unless other.pending?
+        begin
+          other.waha_client.sessions.destroy
+        rescue => e
+          Rails.logger.warn "[WahaSession#absorb_duplicate_sessions!] #{other.session_name}: #{e.message}"
+        end
+      end
+    rescue User::MergeError => e
+      Rails.logger.error(event: "accounts_merge_refused", user_id: user_id, other_user_id: other.user_id, error: e.message)
+      Sentry.capture_exception(e)
+    end
+  end
+
   # Convenience shortcut for building API calls
   def waha_client
     Waha::Client.new(session: session_name)

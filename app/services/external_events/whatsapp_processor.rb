@@ -87,6 +87,8 @@ class ExternalEvents::WhatsappProcessor < ExternalEvents::Base
       @waha_session.update!(waha_chat_id: waha_chat_id)
     end
 
+    @waha_session.absorb_duplicate_sessions! if waha_chat_id.present?
+
     log_info "WahaSession #{@waha_session.id} → status=#{status} chat_id=#{waha_chat_id}"
   end
 

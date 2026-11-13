@@ -266,4 +266,79 @@ class User < ApplicationRecord
   def complete_onboarding!
     update!(onboarding_completed: true)
   end
+
+  class MergeError < StandardError; end
+
+  # Assinaturas que ainda cobram (ou podem cobrar) no Inter: não dá para
+  # descartar numa união de contas.
+  LIVE_SUBSCRIPTION_STATUSES = %w[active trialing past_due].freeze
+
+  # Une `other` (outra conta do mesmo número de WhatsApp) a esta e apaga
+  # `other`: contatos e transcrições, eventos, mensagens, pacotes e a
+  # assinatura que vale. Acontece quando alguém começa pelo bot (conta
+  # "phone") e depois entra pelo site com Google e conecta o mesmo WhatsApp.
+  # Se as duas contas têm assinatura viva, recusa (MergeError): é cobrança
+  # dupla e precisa ser resolvida à mão.
+  def absorb!(other)
+    raise MergeError, "user #{id} não pode absorver a si mesmo" if other == self
+
+    mine, theirs = subscription, other.subscription
+    mine_live    = mine && LIVE_SUBSCRIPTION_STATUSES.include?(mine.status)
+    theirs_live  = theirs && LIVE_SUBSCRIPTION_STATUSES.include?(theirs.status)
+    raise MergeError, "users #{id} e #{other.id} têm assinatura viva" if mine_live && theirs_live
+
+    transaction do
+      if theirs && (theirs_live || mine.nil?)
+        mine&.destroy!
+        theirs.update!(user: self)
+        self.plan = other.plan
+      else
+        theirs&.destroy!
+      end
+
+      absorb_waha_session!(other.waha_session) if other.waha_session
+
+      UsageEvent.where(user_id: other.id).update_all(user_id: id)
+      WhatsappMessage.where(user_id: other.id).update_all(user_id: id)
+      SignInToken.where(user_id: other.id).update_all(user_id: id)
+      AudioPack.where(user_id: other.id).update_all(user_id: id)
+
+      self.acquisition_channel ||= other.acquisition_channel
+      self.acquisition_ref     ||= other.acquisition_ref
+      self.conversation_state    = other.conversation_state.merge(conversation_state)
+      self.onboarding_completed  ||= other.onboarding_completed
+      save!
+
+      other.reload.destroy!
+      reload_subscription
+      UsageEvent.track(user: self, event_type: UsageEvent::ACCOUNTS_MERGED,
+                       metadata: { merged_user_id: other.id, merged_provider: other.provider,
+                                   subscription_id: subscription&.id })
+    end
+
+    Rails.logger.info(event: "accounts_merged", user_id: id, merged_user_id: other.id, plan: plan)
+  end
+
+  private
+
+  # Contatos da sessão de outra conta vêm para a nossa; o mesmo número nas
+  # duas vira um contato só (com as transcrições dos dois).
+  def absorb_waha_session!(other_session)
+    if waha_session.nil?
+      other_session.update!(user: self)
+      return
+    end
+
+    other_session.monitored_contacts.each do |contact|
+      existing = waha_session.monitored_contacts.find_by(phone_number: contact.phone_number)
+      if existing
+        Transcription.where(monitored_contact_id: contact.id).update_all(monitored_contact_id: existing.id)
+        contact.destroy!
+      else
+        contact.update!(waha_session: waha_session)
+      end
+    end
+
+    other_session.reload.destroy!
+  end
 end

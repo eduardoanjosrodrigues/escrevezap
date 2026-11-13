@@ -10,6 +10,7 @@ class UsageEvent < ApplicationRecord
   LONG_AUDIO_CANCELLED               = "long_audio_cancelled"
   FIRST_CONTACT                      = "first_contact"
   FOLLOW_UP_SENT                     = "follow_up_sent"
+  ACCOUNTS_MERGED                    = "accounts_merged"
 
   # Funil de pagamento: bateu no limite → tocou em assinar → recebeu o Pix →
   # pagou. LIMIT_REACHED vai a cada áudio recusado; metadata.notified diz se
