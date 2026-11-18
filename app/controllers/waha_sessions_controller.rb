@@ -12,18 +12,6 @@ class WahaSessionsController < ApplicationController
     render json: { status: @waha_session&.waha_status || "pending" }
   end
 
-  # GET /app/waha_session/qr  (JSON)
-  def qr
-    data = @waha_session.waha_client.sessions.qr
-    if data["mimetype"].present? && data["data"].present?
-      render json: { qr: "data:#{data['mimetype']};base64,#{data['data']}" }
-    else
-      render json: { qr: nil }, status: :not_found
-    end
-  rescue => e
-    render json: { qr: nil, error: e.message }, status: :service_unavailable
-  end
-
   # POST /app/waha_session/pairing_code  (JSON)
   def pairing_code
     phone = params[:phone_number].to_s.gsub(/\D/, "")
@@ -33,37 +21,17 @@ class WahaSessionsController < ApplicationController
       return
     end
 
-    if @waha_session.waha_status != "scan_qr_code"
-      begin
-        @waha_session.waha_client.sessions.restart
-      rescue => _e
-        @waha_session.connect! rescue nil
-      end
-
-      @waha_session.update!(waha_status: :starting)
-
-      # Aguarda até 15 segundos para a sessão estar pronta (scan_qr_code)
-      15.times do
-        session_info = @waha_session.waha_client.sessions.get rescue nil
-        if session_info && session_info["status"] == "SCAN_QR_CODE"
-          @waha_session.update!(waha_status: :scan_qr_code)
-          break
-        end
-        sleep 1
-      end
-    end
-
-    result = @waha_session.waha_client.sessions.request_pairing_code(phone_number: phone)
-    render json: { code: result["code"] }
+    @waha_session.save! if @waha_session.new_record?
+    render json: { code: @waha_session.request_pairing_code(phone) }
   rescue => e
+    Sentry.capture_exception(e)
     render json: { error: "Aguarde alguns segundos e tente novamente. (#{e.message})" }, status: :service_unavailable
   end
 
   # POST /app/waha_session/reconnect
   def reconnect
     begin
-      @waha_session.waha_client.sessions.restart
-      @waha_session.update!(waha_status: :starting)
+      @waha_session.reconnect!
       respond_to do |format|
         format.html { redirect_to app_waha_session_path, notice: "Reconectando WhatsApp..." }
         format.json { render json: { status: @waha_session.waha_status } }

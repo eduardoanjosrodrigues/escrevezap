@@ -60,7 +60,6 @@ Rails.application.routes.draw do
       # WhatsApp connection
       resource :waha_session,        only: [ :show, :create, :destroy ], as: :app_waha_session do
         member do
-          get  :qr
           get  :status
           post :pairing_code
           post :reconnect
@@ -104,7 +103,7 @@ Rails.application.routes.draw do
   end
 
   namespace :webhook do
-    resource :waha,       only: [ :create ], controller: :waha
+    resource :waxum,      only: [ :create ], controller: :waxum
     resource :inter,      only: [ :create ], controller: :inter
 
     get "meta", to: "meta#index"

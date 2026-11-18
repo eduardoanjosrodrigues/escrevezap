@@ -211,7 +211,7 @@ class TranscribeAudioJob < ApplicationJob
   end
 
   def process_transcription(transcription, channel, user, confirmed: false)
-    unless transcription.media_url.present? || transcription.media_id.present?
+    unless transcription.audio_message_id.present? || transcription.media_url.present? || transcription.media_id.present?
       fail_transcription!(transcription, "URL de mídia ausente na mensagem")
       return
     end

@@ -3,7 +3,7 @@ module Reply
     private
 
     # Passo 1 (onboarding_connect / menu_connect): mostra onde inserir o código
-    # ANTES de gerá-lo. O código expira em ~2 min, então só pedimos ao WAHA
+    # ANTES de gerá-lo. O código expira em ~2 min, então só pedimos ao Waxum
     # quando a pessoa confirma que já está na tela certa (pairing_ready).
     def show_connection_instructions
       instructions = <<~MSG
@@ -49,7 +49,7 @@ module Reply
 
       @current_conversation_state["stage"] = "waiting_for_connection"
       # Lido pelo PairingCodeExpiredNoticeJob para avisar só quem pediu código
-      # de verdade (e não nos reinícios em massa do WAHA).
+      # de verdade (e não nos reinícios em massa do gateway).
       @current_conversation_state["pairing_code_requested_at"] = Time.current.iso8601
 
       # Send a simple follow-up action list

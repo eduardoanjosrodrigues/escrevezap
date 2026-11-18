@@ -1,17 +1,19 @@
 class ExternalEvent < ApplicationRecord
+  # waha: eventos antigos, de antes da troca pelo Waxum (só histórico).
   enum :provider, {
+    waxum: "waxum",
     waha: "waha",
     meta: "meta",
     inter: "inter"
-  }, default: :waha
+  }, default: :waxum
 
   enum :status, { pending: "pending", completed: "completed", failed: "failed" }, default: :pending
 
   def process
     whatsapp_processor = ExternalEvents::WhatsappProcessor.new(self)
     case provider
-    when "waha"
-      whatsapp_processor.process_event(worker_type: :waha)
+    when "waxum"
+      whatsapp_processor.process_event(worker_type: :waxum)
     when "meta"
       whatsapp_processor.process_event(worker_type: :meta)
     when "inter"

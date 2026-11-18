@@ -20,8 +20,7 @@ class FetchMonitoredContactProfilePictureJob < ApplicationJob
   private
 
   def fetch_avatar(contact, waha_session, chat_id)
-    picture_data = waha_session.waha_client.contacts.profile_picture(contact_id: chat_id)
-    url = picture_data.is_a?(Hash) ? picture_data["profilePictureURL"] : nil
+    url = waha_session.waxum.profile_picture_url(chat_id)
     contact.update_column(:avatar_url, url) if url.present?
   rescue => e
     Rails.logger.warn("[FetchMonitoredContactProfilePictureJob] avatar fetch failed for contact=#{contact.id}: #{e.message}")
@@ -29,11 +28,11 @@ class FetchMonitoredContactProfilePictureJob < ApplicationJob
   end
 
   def fetch_display_name(contact, waha_session, chat_id)
-    all_contacts = waha_session.waha_client.contacts.list_all
-    match = all_contacts.find { |c| c["id"] == chat_id }
+    phone = chat_id.split("@").first
+    match = waha_session.waxum.contacts.find { |c| c["phone"] == phone || c["jid"].to_s.start_with?("#{phone}@") }
     return unless match
 
-    name = match["name"].presence || match["pushname"].presence
+    name = match["full_name"].presence || match["push_name"].presence
     contact.update_column(:display_name, name) if name.present?
   rescue => e
     Rails.logger.warn("[FetchMonitoredContactProfilePictureJob] display_name fetch failed for contact=#{contact.id}: #{e.message}")

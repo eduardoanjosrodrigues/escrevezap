@@ -1,5 +1,6 @@
 class Transcription < ApplicationRecord
   belongs_to :monitored_contact
+  belongs_to :audio_message, optional: true
   has_one    :waha_session, through: :monitored_contact
   has_one    :user,         through: :waha_session
   has_one_attached :audio
@@ -21,7 +22,7 @@ class Transcription < ApplicationRecord
   }, default: :incoming
 
   # Which transport this transcription's audio/reply travels through.
-  #   :waha   → connected WhatsApp session (Waha/Baileys)
+  #   :waha   → connected WhatsApp session (Waxum; the value predates it)
   #   :direct → user chatting directly with the EscreveZap number (Meta Cloud API)
   enum :channel, {
     waha:   "waha",

@@ -25,3 +25,6 @@ production:
     class: InterRecurringBillingJob
     queue: default
     schedule: every day at 9am
+  prune_audio_messages:
+    command: "AudioMessage.expired.in_batches(of: 1000).delete_all"
+    schedule: every day at 4am

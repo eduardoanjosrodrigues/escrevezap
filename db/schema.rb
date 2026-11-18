@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_02_120100) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_18_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -40,6 +40,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_120100) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "audio_messages", force: :cascade do |t|
+    t.string "chat_jid", null: false
+    t.datetime "created_at", null: false
+    t.string "direct_path", null: false
+    t.string "file_enc_sha256", null: false
+    t.bigint "file_length", null: false
+    t.string "file_sha256", null: false
+    t.boolean "from_me", default: false, null: false
+    t.string "media_key", null: false
+    t.string "message_id", null: false
+    t.string "mimetype"
+    t.string "phone", null: false
+    t.integer "seconds"
+    t.datetime "updated_at", null: false
+    t.bigint "waha_session_id", null: false
+    t.index ["created_at"], name: "index_audio_messages_on_created_at"
+    t.index ["waha_session_id", "message_id"], name: "index_audio_messages_on_waha_session_id_and_message_id", unique: true
+    t.index ["waha_session_id"], name: "index_audio_messages_on_waha_session_id"
   end
 
   create_table "audio_packs", force: :cascade do |t|
@@ -156,6 +176,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_120100) do
 
   create_table "transcriptions", force: :cascade do |t|
     t.float "audio_duration"
+    t.bigint "audio_message_id"
     t.string "channel", default: "waha", null: false
     t.datetime "created_at", null: false
     t.integer "credits", default: 1, null: false
@@ -172,6 +193,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_120100) do
     t.text "transcript"
     t.datetime "updated_at", null: false
     t.string "waha_message_id"
+    t.index ["audio_message_id"], name: "index_transcriptions_on_audio_message_id"
     t.index ["channel"], name: "index_transcriptions_on_channel"
     t.index ["engine", "created_at"], name: "index_transcriptions_on_engine_and_created_at"
     t.index ["monitored_contact_id", "created_at"], name: "index_transcriptions_on_monitored_contact_id_and_created_at"
@@ -273,12 +295,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_120100) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "audio_messages", "waha_sessions"
   add_foreign_key "audio_packs", "users"
   add_foreign_key "monitored_contacts", "waha_sessions"
   add_foreign_key "provider_usages", "transcriptions"
   add_foreign_key "sign_in_tokens", "users"
   add_foreign_key "subscriptions", "users"
   add_foreign_key "transcription_errors", "transcriptions"
+  add_foreign_key "transcriptions", "audio_messages", on_delete: :nullify
   add_foreign_key "transcriptions", "monitored_contacts"
   add_foreign_key "usage_events", "users"
   add_foreign_key "waha_session_events", "waha_sessions"

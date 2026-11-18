@@ -3,6 +3,7 @@ class WahaSession < ApplicationRecord
   has_many :monitored_contacts, dependent: :destroy
   has_many :transcriptions, through: :monitored_contacts
   has_many :waha_session_events, dependent: :destroy
+  has_many :audio_messages, dependent: :delete_all
 
   enum :waha_status, {
     pending:      "pending",      # session not yet created in Waha
@@ -83,7 +84,7 @@ class WahaSession < ApplicationRecord
 
       unless other.pending?
         begin
-          other.waha_client.sessions.destroy
+          other.waxum.delete_session
         rescue => e
           Rails.logger.warn "[WahaSession#absorb_duplicate_sessions!] #{other.session_name}: #{e.message}"
         end
@@ -94,84 +95,59 @@ class WahaSession < ApplicationRecord
     end
   end
 
-  # Convenience shortcut for building API calls
-  def waha_client
-    Waha::Client.new(session: session_name)
+  # Status no app ↔ sessão no Waxum (o nome da sessão é o mesmo).
+  def waxum
+    Waxum::Client.new(session: session_name)
   end
 
-  # Create (or restart) the Waha session and mark as starting.
+  # Garante a sessão no Waxum (criando se não existe), com o webhook do app,
+  # e manda conectar. Sessão já pareada reconecta sozinha com as chaves.
   def connect!
-    waha_client.sessions.create
-    update!(waha_status: :starting)
+    waxum.create_session if waxum.session_info.nil?
+    waxum.ensure_webhook!
+    waxum.connect
+    update!(waha_status: :starting) unless working?
   rescue => e
     update!(waha_status: :failed)
     raise e
   end
+  alias_method :reconnect!, :connect!
 
-  # Stop the Waha session gracefully.
+  # Para de receber eventos (o aparelho continua vinculado).
   def disconnect!
-    waha_client.sessions.stop
+    waxum.disconnect
     update!(waha_status: :stopped)
   rescue => e
     Rails.logger.warn "[WahaSession#disconnect!] #{e.message}"
     Sentry.capture_exception(e)
+    update!(waha_status: :stopped)
   end
 
-  # Requests a pairing code from WAHA for the given phone number.
-  # Handles starting/connecting the session if not running.
+  # Código de 8 letras para conectar pelo número ("Conectar com número de
+  # telefone" no WhatsApp). Vale ~3 minutos.
   def request_pairing_code(phone_number)
     phone = phone_number.to_s.gsub(/\D/, "")
     raise "Número de telefone inválido" if phone.blank?
 
-    # Confere o status real no Waha: o waha_status local pode estar desatualizado
-    # (ex.: sessão FAILED no Waha e scan_qr_code aqui), e o Waha só aceita pedir
-    # código em SCAN_QR_CODE.
-    live_status = (waha_client.sessions.get rescue nil)&.dig("status")
-
-    unless live_status == "SCAN_QR_CODE"
-      begin
-        waha_client.sessions.restart
-        update!(waha_status: :starting)
-      rescue => e
-        if missing_waha_session_error?(e)
-          connect!
-        else
-          raise e
-        end
-      end
-
-      # Wait up to 15 seconds for the session to reach scan_qr_code state
-      15.times do
-        session_info = waha_client.sessions.get rescue nil
-        if session_info && session_info["status"] == "SCAN_QR_CODE"
-          update!(waha_status: :scan_qr_code)
-          break
-        end
-        sleep 1
-      end
-    end
-
-    result = waha_client.sessions.request_pairing_code(phone_number: phone)
-    result["code"]
+    waxum.create_session if waxum.session_info.nil?
+    waxum.ensure_webhook!
+    code = waxum.pair(phone)
+    update!(waha_status: :scan_qr_code)
+    code
   rescue => e
-    Rails.logger.error "[WahaSession#request_pairing_code] Error requesting pairing code: #{e.class} #{e.message}"
+    Rails.logger.error "[WahaSession#request_pairing_code] #{e.class} #{e.message}"
     raise e
   end
 
-  def missing_waha_session_error?(error)
-    [error, error.cause].compact.any? do |err|
-      next false unless err.is_a?(ApiRequest::ApiClientError)
+  # Número e nome do WhatsApp conectado (os eventos de conexão do Waxum não
+  # trazem). Une contas duplicadas do mesmo número (ver absorb_duplicate_sessions!).
+  def sync_profile!
+    info = waxum.session_info
+    return if info.nil? || info["phone_number"].blank?
 
-      message = err.message.to_s.downcase
-      has_404 = message.include?(" 404 ") || message.include?("404")
-      missing_session = message.include?("session") && (
-        message.include?("not found") ||
-        message.include?("does not exist") ||
-        message.include?("unknown")
-      )
-
-      has_404 || missing_session
-    end
+    chat_id = "#{info['phone_number'].to_s.gsub(/\D/, '')}@c.us"
+    update!(waha_chat_id: chat_id, display_name: display_name.presence || info["push_name"].presence)
+    absorb_duplicate_sessions!
   end
 
   # Transcriptions that count toward the quota. Failed ones don't, and neither
@@ -216,7 +192,7 @@ class WahaSession < ApplicationRecord
     WahaSessionDisconnectCheckJob.set(wait: 1.minute).perform_later(id)
   end
 
-  # O código de pareamento expira em ~2min40 e o WAHA leva a sessão para failed.
+  # O código de pareamento expira em ~3min e a sessão vai para failed.
   # O job decide se o usuário pediu esse código (e por isso deve ser avisado).
   def schedule_pairing_code_expired_notice
     old_status, new_status = saved_change_to_waha_status
@@ -237,7 +213,7 @@ class WahaSession < ApplicationRecord
     old_status, new_status = saved_change_to_waha_status
     return unless new_status == "working"
 
-    # Only greet on an actual pairing (QR/pairing code accepted). WAHA routinely
+    # Only greet on an actual pairing (QR/pairing code accepted). The gateway
     # bounces healthy sessions working -> starting -> working, and greeting on
     # those reconnects spammed users with the same message several times a day.
     if old_status == "scan_qr_code" && user.provider == "phone" && waha_chat_id.present?

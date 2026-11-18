@@ -1,11 +1,11 @@
 class ExternalEvents::WhatsappProcessor < ExternalEvents::Base
-  # MIME types that indicate an audio message. Waha can return several variants.
+  # MIME types that indicate an audio message.
   AUDIO_MIMETYPES = %w[
     audio/ogg audio/mpeg audio/mp4 audio/wav audio/webm audio/aac audio/opus
   ].freeze
 
   # Any emoji reaction will trigger transcription when the user reacts to a message.
-  def process(worker_type: :waha)
+  def process(worker_type: :waxum)
     @data = parse_payload(worker_type)
     @external_event.update!(parsed_event: @data)
 
@@ -44,12 +44,10 @@ class ExternalEvents::WhatsappProcessor < ExternalEvents::Base
     case @data[:event]
     when "session.status"
       process_session_status
-    when "message", "message.any"
+    when "message"
       process_incoming_message
     when "message.reaction"
       process_reaction
-    when "message.ack"
-      log_info "Evento #{@data[:event]} recebido — ignorado nesta versão"
     else
       log_warning "Evento desconhecido: #{@data[:event]}"
     end
@@ -76,24 +74,34 @@ class ExternalEvents::WhatsappProcessor < ExternalEvents::Base
   # ── session.status ────────────────────────────────────────────────────
 
   def process_session_status
-    status       = @data.dig(:payload, :status).to_s.downcase
-    waha_chat_id = @data.dig(:payload, :waha_chat_id)
+    status = @data.dig(:payload, :status).to_s
 
-    if status.present? && WahaSession.waha_statuses.key?(status)
-      @waha_session.update!(waha_status: status)
+    # O WhatsApp recusou a versão do cliente: todas as sessões caem e só
+    # atualizar o Waxum resolve. Não é culpa do usuário, então não mexe no
+    # status (não dispara aviso de desconexão).
+    if @data.dig(:payload, :raw_event) == "client_outdated"
+      log_error "Waxum: cliente desatualizado (client_outdated) na sessão #{@waha_session.session_name}"
+      Sentry.capture_message("Waxum client_outdated", extra: { session: @waha_session.session_name })
+      return
     end
 
-    if waha_chat_id.present? && @waha_session.waha_chat_id != waha_chat_id
-      @waha_session.update!(waha_chat_id: waha_chat_id)
-    end
+    # Os eventos de conexão não trazem o número: busca na sessão. Gravar o
+    # número antes do status deixa o aviso de "conectado" (complete_user_onboarding)
+    # com o destinatário certo.
+    # Código de pareamento que expirou derruba o socket (disconnected): para
+    # o app isso é falha do pareamento, não queda de conexão.
+    status = "failed" if status == "starting" && @waha_session.scan_qr_code?
 
-    @waha_session.absorb_duplicate_sessions! if waha_chat_id.present?
+    @waha_session.sync_profile! if status == "working"
+    @waha_session.update!(waha_status: status) if WahaSession.waha_statuses.key?(status)
 
-    log_info "WahaSession #{@waha_session.id} → status=#{status} chat_id=#{waha_chat_id}"
+    log_info "WahaSession #{@waha_session.id} → status=#{status} chat_id=#{@waha_session.waha_chat_id}"
   end
 
   # ── message / message.any ─────────────────────────────────────────────
 
+  # Todo áudio é guardado com as chaves da mídia: no modo reação ele só é
+  # transcrito quando o dono reagir a ele.
   def process_incoming_message
     payload = @data[:payload]
 
@@ -102,14 +110,15 @@ class ExternalEvents::WhatsappProcessor < ExternalEvents::Base
       return
     end
 
-    # In reaction mode we ignore audios at intake — the user must explicitly
-    # react with 👀 on the message to trigger transcription.
+    audio = store_audio_message(payload)
+    return if audio.nil?
+
     if @waha_session.mode_reaction?
-      log_info "Áudio ignorado (modo reação): aguardando reação 👀"
+      log_info "Áudio guardado (modo reação): aguardando reação"
       return
     end
 
-    enqueue_transcription(payload)
+    enqueue_transcription(audio)
   end
 
   # ── message.reaction ──────────────────────────────────────────────────
@@ -129,18 +138,11 @@ class ExternalEvents::WhatsappProcessor < ExternalEvents::Base
 
 
 
-    chat_id    = payload[:from].to_s
     message_id = payload[:reply_to_id]
 
-    if chat_id.blank? || message_id.blank?
-      log_warning "Reação inválida: chat_id ou message_id ausente"
-      return
-    end
-
-    # Reações em status (stories) não são áudios de conversa e o Waha nem
-    # sempre consegue buscar essas mensagens.
-    if chat_id.start_with?("status@")
-      log_info "Reação ignorada: reação em status"
+    # Reação removida chega com emoji vazio.
+    if message_id.blank? || payload[:body].blank?
+      log_info "Reação ignorada: sem mensagem alvo ou reação removida"
       return
     end
 
@@ -151,36 +153,42 @@ class ExternalEvents::WhatsappProcessor < ExternalEvents::Base
       return
     end
 
-    message = fetch_message(chat_id, message_id)
-    if message.blank?
-      log_warning "Não foi possível buscar mensagem #{message_id} no chat #{chat_id}"
+    # Só áudios que chegaram pelo webhook são conhecidos: reação em texto,
+    # foto etc. (ou em áudio de antes da conexão) não acha nada.
+    audio = @waha_session.audio_messages.find_by(message_id: message_id)
+    if audio.nil?
+      log_info "Reação ignorada: mensagem #{message_id} não é um áudio conhecido"
       return
     end
 
-    raw_for_parser = {
-      event:   "message",
-      session: @waha_session.session_name,
-      payload: message
-    }.deep_symbolize_keys
-
-    message_payload = ExternalEvents::WhatsappParsers::GowsParser
-                        .new(raw_for_parser)
-                        .parse[:payload]
-
-    unless audio_message?(message_payload)
-      log_info "Reação ignorada: mensagem alvo não é áudio"
-      return
-    end
-
-    enqueue_transcription(message_payload)
+    enqueue_transcription(audio)
   end
 
-  # Shared pipeline: given a parsed message payload (with audio), resolve the
-  # contact (auto-creating one when needed) and queue the transcription job.
-  def enqueue_transcription(payload)
-    from_me = payload[:fromMe]
-    chat_id = payload[:from].to_s
-    phone   = chat_id.split("@").first
+  def store_audio_message(payload)
+    media = payload[:media]
+    @waha_session.audio_messages.create_or_find_by!(message_id: payload[:message_id]) do |audio|
+      audio.chat_jid        = payload[:chat_jid]
+      audio.phone           = payload[:phone]
+      audio.from_me         = payload[:fromMe]
+      audio.mimetype        = media[:mimetype]
+      audio.seconds         = media[:seconds]
+      audio.direct_path     = media[:direct_path]
+      audio.media_key       = media[:media_key]
+      audio.file_sha256     = media[:file_sha256]
+      audio.file_enc_sha256 = media[:file_enc_sha256]
+      audio.file_length     = media[:file_length]
+    end
+  rescue ActiveRecord::RecordInvalid => e
+    log_warning "Áudio sem chaves de mídia (message=#{payload[:message_id]}): #{e.message}"
+    nil
+  end
+
+  # Shared pipeline: given a stored audio, resolve the contact (auto-creating
+  # one when needed) and queue the transcription job.
+  def enqueue_transcription(audio)
+    from_me = audio.from_me
+    phone   = audio.phone
+    chat_id = "#{phone}@c.us"
 
     # A conversa com o bot já é transcrita pelo fluxo direto (Meta). Transcrever
     # de novo pela sessão conectada gasta cota em dobro e manda o placeholder
@@ -206,15 +214,15 @@ class ExternalEvents::WhatsappProcessor < ExternalEvents::Base
       return
     end
 
-    log_info "Criando transcription: contact=#{contact.id} message=#{payload[:message_id]}"
+    log_info "Criando transcription: contact=#{contact.id} message=#{audio.message_id}"
 
     direction = from_me ? "outgoing" : "incoming"
 
     transcription = Transcription.create!(
       monitored_contact: contact,
-      waha_message_id:   payload[:message_id],
+      audio_message:     audio,
+      waha_message_id:   audio.message_id,
       direction:         direction,
-      media_url:         payload.dig(:media, :url),
       status:            :processing
     )
 
@@ -256,24 +264,6 @@ class ExternalEvents::WhatsappProcessor < ExternalEvents::Base
       c.direction    = :both
       c.enabled      = true
       c.auto_created = true
-    end
-  end
-
-  def fetch_message(chat_id, message_id)
-    @waha_session.waha_client.messaging.get_message(chat_id: chat_id, message_id: message_id)
-  rescue => e
-    log_warning "Falha ao buscar mensagem #{message_id}: #{e.class} #{e.message}"
-    Sentry.capture_exception(e) unless message_not_found_error?(e)
-    nil
-  end
-
-  # Mensagem apagada ou fora do histórico do Waha é esperado. O Waha responde
-  # 404, ou 500 com "error getting message by id ... not found".
-  def message_not_found_error?(error)
-    case error
-    when ApiRequest::ApiClientError then error.message.include?(" 404 ")
-    when ApiRequest::ApiServerError then error.message.include?("error getting message by id") && error.message.include?("not found")
-    else false
     end
   end
 
@@ -357,9 +347,8 @@ class ExternalEvents::WhatsappProcessor < ExternalEvents::Base
 
   def parse_payload(worker_type)
     parser_class = case worker_type.to_sym
-    when :waha then ExternalEvents::WhatsappParsers::GowsParser
     when :meta then ExternalEvents::WhatsappParsers::MetaParser
-    else            ExternalEvents::WhatsappParsers::GowsParser
+    else            ExternalEvents::WhatsappParsers::WaxumParser
     end
     parser_class.new(@data).parse
   end

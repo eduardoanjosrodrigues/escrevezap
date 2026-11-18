@@ -1,12 +1,14 @@
 module TranscriptionChannels
-  # Delivers transcription progress/results through a connected Waha session —
-  # the original transport TranscribeAudioJob was built around.
+  # Delivers transcription progress/results through the user's connected
+  # WhatsApp (Waxum), replying inside the original conversation.
   class WahaChannel
     def initialize(transcription)
       @transcription = transcription
-      @contact       = transcription.monitored_contact
-      @waha_session  = @contact.waha_session
-      @chat_id       = @contact.resolve_waha_chat_id
+      @audio         = transcription.audio_message
+      @waha_session  = transcription.monitored_contact.waha_session
+      # A conversa exata do áudio (pode ser @lid): a resposta citando o áudio
+      # precisa ir para o mesmo chat.
+      @chat_id       = @audio&.chat_jid || transcription.monitored_contact.resolve_waha_chat_id
     end
 
     def ready?
@@ -14,20 +16,19 @@ module TranscriptionChannels
     end
 
     def mark_read
-      @waha_session.waha_client.chats.read_messages(chat_id: @chat_id)
+      return if @audio.nil? || @audio.from_me?
+
+      @waha_session.waxum.mark_read(chat: @chat_id, message_ids: @audio.message_id)
     end
 
     def send_placeholder(text)
-      response = @waha_session.waha_client.messaging.send_text(
-        chat_id:  @chat_id,
-        text:     text,
-        reply_to: @transcription.waha_message_id
-      )
-      response["id"]
+      @waha_session.waxum.send_text(to: @chat_id, text: text, reply_to: @transcription.waha_message_id)
     end
 
     def download_audio
-      @waha_session.waha_client.messaging.download_media_from_url(media_url: @transcription.media_url)
+      raise "Áudio sem chaves de mídia (transcription #{@transcription.id})" if @audio.nil?
+
+      @waha_session.waxum.download_media(@audio.media)
     end
 
     # Long texts are split: the placeholder is edited with the first chunk and
@@ -36,11 +37,7 @@ module TranscriptionChannels
       first, *rest = MessageSplitter.split(text)
 
       if placeholder_id.present?
-        @waha_session.waha_client.messaging.edit_message(
-          chat_id:    @chat_id,
-          message_id: placeholder_id,
-          text:       first
-        )
+        @waha_session.waxum.edit_message(to: @chat_id, message_id: placeholder_id, text: first)
       else
         send_chunk(first)
       end
@@ -55,7 +52,7 @@ module TranscriptionChannels
     private
 
     def send_chunk(text)
-      @waha_session.waha_client.messaging.send_text(chat_id: @chat_id, text: text)
+      @waha_session.waxum.send_text(to: @chat_id, text: text)
     end
   end
 end

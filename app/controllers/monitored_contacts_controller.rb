@@ -19,10 +19,10 @@ class MonitoredContactsController < ApplicationController
       render json: { contacts: [] } and return
     end
 
-    raw = waha_session.waha_client.contacts.list_all
+    raw = waha_session.waxum.contacts.select { |c| c["jid"].to_s.end_with?("@s.whatsapp.net") }
     contacts = raw.map do |c|
-      phone = c["id"].to_s.gsub("@c.us", "")
-      name  = c["name"].presence || c["pushname"].presence
+      phone = c["phone"].presence || c["jid"].to_s.split("@").first
+      name  = c["full_name"].presence || c["push_name"].presence
       { phone: phone, name: name, label: [name, phone].compact.join(" · ") }
     end.sort_by { |c| c[:name].to_s.downcase }
 

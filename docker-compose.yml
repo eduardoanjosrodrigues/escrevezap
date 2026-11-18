@@ -10,37 +10,54 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_HOST_AUTH_METHOD: trust
 
-  waha:
-    # image: hsiereveld/waha-plus:latest # 2026.1.1
-    # image: tanujempiricinfotech/waha-plus:latest # 2026.1.3
-    image: contatomyvillage/waha-plus:gows # 2026.3.4
-    ports:
-      - 3003:3003
+  # Gateway de WhatsApp (Rust, fork ACAN-Projects/waxum). O token abre todas
+  # as sessões; só o web/worker falam com ele, pela rede interna. Os
+  # webhooks saem para https://escrevezap.com.br/webhook/waxum (o Waxum
+  # recusa URL de rede privada), assinados com WAXUM_WEBHOOK_SECRET.
+  # Cada sessão (= WhatsApp de um usuário) fica em <volume>/sessions/user_N.
+  waxum:
+    build: https://github.com/ACAN-Projects/waxum.git#WAXUM_REF
     env_file:
-      - .env.waha
+      - .env.waxum
+    environment:
+      WA_RS_HOST: 0.0.0.0
+      PORT: "3451"
+      WHATSAPP_STORAGE_PATH: /app/whatsapp_sessions/sessions
+      SQLITE_PATH: /app/whatsapp_sessions/waxum.db
+      # Guarda de mensagens: dá a citação completa nas respostas (reply_to).
+      MESSAGE_HISTORY_ENABLED: "true"
+      # É o WhatsApp pessoal do usuário: nunca aparecer "online" sozinho (o
+      # celular para de notificar) nem recusar ligações.
+      PRESENCE_POLICY: manual
+      AUTO_REJECT_INCOMING_CALLS: "false"
+      AUTO_PRESENCE_ON_SEND: "false"
+      WA_LOCATION_COUNTRY: BR
+      WA_LOCATION_CODE: BR
+      WA_LOCATION_CITY: SaoPaulo
+      WA_LOCATION_REGION: SP
+      WA_LOCATION_TZ: America/Sao_Paulo
+      WA_LOCATION_LAT: "-23.55"
+      WA_LOCATION_LON: "-46.63"
+      RUST_LOG: waxum=info,tower_http=warn
+    # Cada sessão segura 50-70 descritores; o padrão (1024) trava em ~15.
+    ulimits:
+      nofile: { soft: 65536, hard: 65536 }
     volumes:
-      - waha-media:/waha/media
-    depends_on:
-      - redis
-      - db-waha
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - waxum:/app/whatsapp_sessions
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+    ports:
+      - 3451:3451
+
   redis:
     image: redis:7-alpine
     volumes:
       - redis-volume:/var/lib/redis/data
 
-  db-waha:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: waha
-      POSTGRES_USER: waha
-      POSTGRES_PASSWORD: changeme
-    volumes:
-      - db-waha-volume:/var/lib/postgresql/data
-
 volumes:
-  db-waha-volume:
   redis-volume:
-  waha-media:
+  waxum:
   db-volume:

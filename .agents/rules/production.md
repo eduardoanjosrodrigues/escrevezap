@@ -17,7 +17,7 @@ commands and deploy — no need to ask for permission just to look.
 ssh eduardo@server 'cd ~/microsaas/escrevezap && docker compose -f docker-compose-production.yml ps'
 ```
 
-Services: `web`, `worker`, `db`, `redis`, `waha`, `db-waha`, `cloudflared`.
+Services: `web`, `worker`, `db`, `redis`, `waxum`, `cloudflared`.
 
 ---
 
