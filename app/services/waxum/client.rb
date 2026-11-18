@@ -128,6 +128,17 @@ module Waxum
       Base64.decode64(response["data"])
     end
 
+    # Chaves da mídia de uma mensagem guardada pelo Waxum (mesmo formato de
+    # data.media no webhook), ou nil. Cobre mensagens que chegaram antes da
+    # conexão (sincronização do histórico) e nunca vieram pelo webhook.
+    def stored_media(chat:, message_id:)
+      jid = ERB::Util.url_encode(self.class.jid(chat))
+      media = @api.get(path("/store/chats/#{jid}/messages/#{ERB::Util.url_encode(message_id)}/media"))
+      media.is_a?(Hash) ? media : nil
+    rescue ApiRequest::ApiClientError
+      nil
+    end
+
     # ── Contatos ────────────────────────────────────────────────────────
 
     def profile_picture_url(chat_id)

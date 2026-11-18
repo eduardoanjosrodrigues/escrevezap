@@ -53,11 +53,12 @@ module ExternalEvents
         reaction = data[:reaction] || {}
 
         {
-          chat_jid:    Waxum::Client.jid(data[:chat]),
-          phone:       phone_of(data[:chat], data[:chat_phone]),
-          fromMe:      data[:is_from_me] == true,
-          body:        reaction[:emoji] || data[:text],
-          reply_to_id: reaction[:message_id]
+          chat_jid:        Waxum::Client.jid(data[:chat]),
+          phone:           phone_of(data[:chat], data[:chat_phone]),
+          fromMe:          data[:is_from_me] == true,
+          body:            reaction[:emoji] || data[:text],
+          reply_to_id:     reaction[:message_id],
+          reacted_from_me: reaction[:from_me] == true
         }
       end
 

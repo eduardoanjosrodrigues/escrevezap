@@ -80,7 +80,7 @@ services:
   # recusa URL de rede privada), assinados com WAXUM_WEBHOOK_SECRET.
   # Cada sessão (= WhatsApp de um usuário) fica em <volume>/sessions/user_N.
   waxum:
-    build: https://github.com/ACAN-Projects/waxum.git#04631cc0d66af8f2c0aa6bbf2499c1c48c28ea8a
+    build: https://github.com/ACAN-Projects/waxum.git#0ba04e82f0820b2697aa25a13c3f920e1fc3d0da
     env_file:
       - .env.waxum
     environment:

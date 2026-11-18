@@ -153,15 +153,28 @@ class ExternalEvents::WhatsappProcessor < ExternalEvents::Base
       return
     end
 
-    # Só áudios que chegaram pelo webhook são conhecidos: reação em texto,
-    # foto etc. (ou em áudio de antes da conexão) não acha nada.
-    audio = @waha_session.audio_messages.find_by(message_id: message_id)
+    # Áudio que chegou pelo webhook, ou, se veio antes da conexão, o que o
+    # Waxum guardou da sincronização do histórico.
+    audio = @waha_session.audio_messages.find_by(message_id: message_id) || stored_audio(payload)
     if audio.nil?
-      log_info "Reação ignorada: mensagem #{message_id} não é um áudio conhecido"
+      log_info "Reação ignorada: mensagem #{message_id} não é áudio"
       return
     end
 
     enqueue_transcription(audio)
+  end
+
+  def stored_audio(payload)
+    media = @waha_session.waxum.stored_media(chat: payload[:chat_jid], message_id: payload[:reply_to_id])
+    return nil unless media && media["kind"] == "audio"
+
+    store_audio_message(
+      message_id: payload[:reply_to_id],
+      chat_jid:   payload[:chat_jid],
+      phone:      payload[:phone],
+      fromMe:     payload[:reacted_from_me],
+      media:      media.deep_symbolize_keys
+    )
   end
 
   def store_audio_message(payload)
