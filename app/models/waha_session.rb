@@ -133,6 +133,7 @@ class WahaSession < ApplicationRecord
     waxum.ensure_webhook!
     code = waxum.pair(phone)
     update!(waha_status: :scan_qr_code)
+    WahaSessionPairingCheckJob.set(wait: WahaSessionPairingCheckJob::INTERVAL).perform_later(id)
     code
   rescue => e
     Rails.logger.error "[WahaSession#request_pairing_code] #{e.class} #{e.message}"
@@ -140,13 +141,14 @@ class WahaSession < ApplicationRecord
   end
 
   # Número e nome do WhatsApp conectado (os eventos de conexão do Waxum não
-  # trazem). Une contas duplicadas do mesmo número (ver absorb_duplicate_sessions!).
+  # trazem, e o session_info fica sem número quando o pareamento é por
+  # código). Une contas duplicadas do mesmo número (ver absorb_duplicate_sessions!).
   def sync_profile!
-    info = waxum.session_info
-    return if info.nil? || info["phone_number"].blank?
+    profile = waxum.profile
+    phone = profile["phone_number"].to_s.gsub(/\D/, "")
+    return if phone.blank?
 
-    chat_id = "#{info['phone_number'].to_s.gsub(/\D/, '')}@c.us"
-    update!(waha_chat_id: chat_id, display_name: display_name.presence || info["push_name"].presence)
+    update!(waha_chat_id: "#{phone}@c.us", display_name: display_name.presence || profile["name"].presence)
     absorb_duplicate_sessions!
   end
 

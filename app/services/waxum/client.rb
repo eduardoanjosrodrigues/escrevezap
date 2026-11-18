@@ -48,6 +48,17 @@ module Waxum
       nil
     end
 
+    # Estado ao vivo: { "status", "is_logged_in", "socket_alive", ... }.
+    # Mais confiável que session_info, que só é atualizado no evento connected.
+    def status
+      @api.get(path("/status"))
+    end
+
+    # Conta conectada: { "phone_number" => "5585...", "name" => "...", ... }
+    def profile
+      @api.get(path("/profile"))
+    end
+
     def create_session
       @api.post("/api/v1/sessions", { id: @session, name: @session })
     end
